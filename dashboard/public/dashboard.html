@@ -8,7 +8,7 @@
 </head>
 <body>
   <header class="topbar">
-    <strong>Telegram Dashboard</strong>
+    <strong>DaemonERA Dashboard</strong>
     <div class="right">
       <span id="whoami" class="muted"></span>
       <button id="logout">Log out</button>
@@ -18,17 +18,36 @@
   <main class="wrap">
     <section id="me-card" class="card"></section>
     <section id="admin-card" class="card hidden">
-      <h2>Users</h2>
+      <div class="table-header">
+        <h2>Users</h2>
+        <div class="filters">
+          <input id="search" type="text" placeholder="Search name / username…" class="search-input" />
+          <select id="source-filter" class="filter-select">
+            <option value="">All sources</option>
+            <option value="widget">Widget</option>
+            <option value="bot">Bot</option>
+            <option value="extension">Extension</option>
+          </select>
+        </div>
+      </div>
+      <div id="stats" class="stats-row"></div>
       <div class="table-wrap">
         <table id="users">
           <thead>
             <tr>
-              <th></th><th>ID</th><th>Username</th><th>Name</th>
-              <th>Source</th><th>Logins</th><th>Last login</th>
+              <th></th>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Source</th>
+              <th>Logins</th>
+              <th>Last Login</th>
+              <th>Joined</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody id="users-body"></tbody>
         </table>
+        <p id="no-results" class="muted" style="text-align:center;padding:20px;display:none">No users match the filter.</p>
       </div>
     </section>
   </main>
@@ -37,10 +56,72 @@
   <script>
     const API = window.APP_CONFIG.API_BASE;
 
-    const fmt = (t) => new Date(t * 1000).toLocaleString();
+    // Get Bearer token from URL param (passed by extension) or use cookie
+    const params = new URLSearchParams(location.search);
+    const urlToken = params.get("token");
+    if (urlToken) {
+      // Store in sessionStorage so page reloads still work
+      sessionStorage.setItem("ext_token", urlToken);
+      // Clean URL
+      history.replaceState({}, "", location.pathname);
+    }
+    const extToken = urlToken || sessionStorage.getItem("ext_token");
+
+    const authHeaders = extToken
+      ? { Authorization: `Bearer ${extToken}` }
+      : {};
+
+    const apiFetch = (path) => fetch(API + path, {
+      credentials: "include",
+      headers: authHeaders,
+    });
+
+    const fmt = (t) => t ? new Date(t * 1000).toLocaleString() : "—";
+    const srcBadge = (s) => {
+      const colors = { widget: "#2b7cff", bot: "#3fb950", extension: "#d2a8ff" };
+      return `<span class="src-badge" style="background:${colors[s]||'#8b949e'}20;color:${colors[s]||'#8b949e'};border:1px solid ${colors[s]||'#8b949e'}40">${s}</span>`;
+    };
+
+    let allUsers = [];
+
+    function renderTable(users) {
+      const tbody = document.getElementById("users-body");
+      const noResults = document.getElementById("no-results");
+      if (!users.length) {
+        tbody.innerHTML = "";
+        noResults.style.display = "block";
+        return;
+      }
+      noResults.style.display = "none";
+      tbody.innerHTML = users.map((u) => `
+        <tr>
+          <td>${u.photo_url ? `<img src="${u.photo_url}" class="avatar sm" />` : `<div class="avatar-placeholder sm">👤</div>`}</td>
+          <td class="mono">${u.telegram_id}</td>
+          <td>${u.username ? `<a href="https://t.me/${u.username}" target="_blank">@${u.username}</a>` : '<span class="muted">—</span>'}</td>
+          <td>${[u.first_name, u.last_name].filter(Boolean).join(" ") || '<span class="muted">—</span>'}</td>
+          <td>${srcBadge(u.source)}</td>
+          <td class="center">${u.login_count}</td>
+          <td>${fmt(u.last_login)}</td>
+          <td>${fmt(u.created_at)}</td>
+        </tr>`).join("");
+    }
+
+    function applyFilters() {
+      const q = document.getElementById("search").value.toLowerCase();
+      const src = document.getElementById("source-filter").value;
+      const filtered = allUsers.filter((u) => {
+        const matchSrc = !src || u.source === src;
+        const matchQ = !q ||
+          String(u.telegram_id).includes(q) ||
+          (u.username || "").toLowerCase().includes(q) ||
+          [u.first_name, u.last_name].filter(Boolean).join(" ").toLowerCase().includes(q);
+        return matchSrc && matchQ;
+      });
+      renderTable(filtered);
+    }
 
     (async () => {
-      const r = await fetch(API + "/me", { credentials: "include" });
+      const r = await apiFetch("/me");
       const { user } = await r.json();
       if (!user) return (location.href = "/");
 
@@ -49,33 +130,37 @@
 
       document.getElementById("me-card").innerHTML = `
         <div class="me">
-          ${user.photo ? `<img src="${user.photo}" class="avatar" />` : ""}
+          ${user.photo ? `<img src="${user.photo}" class="avatar" />` : `<div class="avatar-placeholder">👤</div>`}
           <div>
-            <h2>${user.name || "User"}</h2>
-            <p class="muted">Telegram ID: ${user.sub}
-              ${user.is_admin ? '<span class="badge">admin</span>' : ""}</p>
+            <h2>${user.name || "User"}${user.is_admin ? '<span class="badge">admin</span>' : ""}</h2>
+            <p class="muted">Telegram ID: ${user.sub}</p>
           </div>
         </div>`;
 
       if (user.is_admin) {
-        const ar = await fetch(API + "/admin/users", { credentials: "include" });
+        const ar = await apiFetch("/admin/users");
         const { users } = await ar.json();
-        const tbody = document.querySelector("#users tbody");
-        tbody.innerHTML = users.map((u) => `
-          <tr>
-            <td>${u.photo_url ? `<img src="${u.photo_url}" class="avatar sm"/>` : ""}</td>
-            <td>${u.telegram_id}</td>
-            <td>${u.username ? "@" + u.username : ""}</td>
-            <td>${[u.first_name, u.last_name].filter(Boolean).join(" ")}</td>
-            <td>${u.source}</td>
-            <td>${u.login_count}</td>
-            <td>${fmt(u.last_login)}</td>
-          </tr>`).join("");
+        allUsers = users || [];
+
+        // Stats
+        const bySource = allUsers.reduce((a, u) => {
+          a[u.source] = (a[u.source] || 0) + 1; return a;
+        }, {});
+        document.getElementById("stats").innerHTML = `
+          <div class="stat"><span class="stat-num">${allUsers.length}</span><span class="stat-label">Total users</span></div>
+          ${Object.entries(bySource).map(([s, n]) => `
+          <div class="stat"><span class="stat-num">${n}</span><span class="stat-label">${s}</span></div>`).join("")}`;
+
+        renderTable(allUsers);
         document.getElementById("admin-card").classList.remove("hidden");
+
+        document.getElementById("search").addEventListener("input", applyFilters);
+        document.getElementById("source-filter").addEventListener("change", applyFilters);
       }
     })();
 
     document.getElementById("logout").onclick = async () => {
+      sessionStorage.removeItem("ext_token");
       await fetch(API + "/logout", { method: "POST", credentials: "include" });
       location.href = "/";
     };
