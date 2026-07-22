@@ -329,19 +329,23 @@ export default {
           `⏰ *Time:* ${escMd(ts)}\n` +
           `━━━━━━━━━━━━━━━━━━`;
 
-        // ── Premium group message → name/ID + amount + attempts + time only
+        // ── Premium group message → name/ID + amount + total hits + time only
         const premiumGroupMsg =
-          `🔥 ━━━━━━━━━━━━━━━━━━━ 🔥\n` +
-          `👹  *D A E M O N  •  H I T*\n` +
-          `🔥 ━━━━━━━━━━━━━━━━━━━ 🔥\n` +
+          `✨ ━━━━━━━━━━━━━━━━━━━ ✨\n` +
+          `      👹  *D A E M O N*  👹\n` +
+          `✨ ━━━━━━━━━━━━━━━━━━━ ✨\n` +
           `\n` +
-          `👤  *${name}*\n` +
-          (uname ? `🆔  ${uname}\n` : `🆔  \`${s.sub}\`\n`) +
-          `🪙  *${amountEsc || "N/A"}*\n` +
-          `🎯  Attempt  *#${totalHits}*\n` +
-          `⏰  ${escMd(ts)}\n` +
+          `        ✦  *✅ APPROVED*  ✦\n` +
           `\n` +
-          `🔥 ━━━━━━━━━━━━━━━━━━━ 🔥`;
+          `👑  *${name}*\n` +
+          (uname ? `🎫  ${uname}\n` : `🎫  \`${s.sub}\`\n`) +
+          `💎  *${amountEsc || "N/A"}*\n` +
+          `🏆  *Total Hits:*  #${totalHits}\n` +
+          `🕒  ${escMd(ts)}\n` +
+          `\n` +
+          `✨ ━━━━━━━━━━━━━━━━━━━ ✨\n` +
+          `       ⚡️  *D A E M O N • E R A*  ⚡️\n` +
+          `✨ ━━━━━━━━━━━━━━━━━━━ ✨`;
 
         // Notify all 3 destinations — capture results for debugging
         const personalResult = await sendTelegramMessage(env, s.sub, fullMsg);
