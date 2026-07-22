@@ -271,15 +271,17 @@ export default {
 
         // ── Premium group message → name/ID + amount + attempts + time only
         const premiumGroupMsg =
-          `┌─────────────────────\n` +
-          `│  ⚡️ *DAEMON  •  HIT*\n` +
-          `├─────────────────────\n` +
-          `│ 👤  *${name}*\n` +
-          (uname ? `│ 🆔  ${uname}\n` : `│ 🆔  \`${s.sub}\`\n`) +
-          `│ 💰  *${amount || "N/A"}*\n` +
-          `│ 🎯  Attempt *#${totalHits}*\n` +
-          `│ ⏰  ${ts}\n` +
-          `└─────────────────────`;
+          `🔥 *━━━━━━━━━━━━━━━━━━━* 🔥\n` +
+          `👹  *D A E M O N  •  H I T*\n` +
+          `🔥 *━━━━━━━━━━━━━━━━━━━* 🔥\n` +
+          `\n` +
+          `👤  *${name}*\n` +
+          (uname ? `🆔  ${uname}\n` : `🆔  \`${s.sub}\`\n`) +
+          `🪙  *${amount || "N/A"}*\n` +
+          `🎯  Attempt  *#${totalHits}*\n` +
+          `⏰  ${ts}\n` +
+          `\n` +
+          `🔥 *━━━━━━━━━━━━━━━━━━━* 🔥`;
 
         // Notify user's personal chat (full details)
         await sendTelegramMessage(env, s.sub, fullMsg);
