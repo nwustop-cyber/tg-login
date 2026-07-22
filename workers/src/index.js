@@ -117,12 +117,19 @@ async function upsertUser(env, u, source) {
 }
 
 async function sendTelegramMessage(env, chatId, text) {
-  if (!chatId) return;
-  return fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "Markdown" }),
-  });
+  if (!chatId) return { ok: false, reason: "no_chatId" };
+  if (!env.TELEGRAM_BOT_TOKEN) return { ok: false, reason: "no_bot_token" };
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: "Markdown" }),
+    });
+    const data = await r.json();
+    return { ok: data.ok, chatId, status: r.status, telegram_error: data.description || null };
+  } catch (e) {
+    return { ok: false, chatId, error: String(e) };
+  }
 }
 
 // ─── Router ────────────────────────────────────────────────────────────────
@@ -283,20 +290,28 @@ export default {
           `\n` +
           `🔥 *━━━━━━━━━━━━━━━━━━━* 🔥`;
 
-        // Notify user's personal chat (full details)
-        await sendTelegramMessage(env, s.sub, fullMsg);
+        // Notify all 3 destinations — capture results for debugging
+        const personalResult = await sendTelegramMessage(env, s.sub, fullMsg);
+        const channelResult  = env.TELEGRAM_CHANNEL_ID
+          ? await sendTelegramMessage(env, env.TELEGRAM_CHANNEL_ID, fullMsg)
+          : { ok: false, reason: "TELEGRAM_CHANNEL_ID not set" };
+        const groupResult    = env.TELEGRAM_GROUP_ID
+          ? await sendTelegramMessage(env, env.TELEGRAM_GROUP_ID, premiumGroupMsg)
+          : { ok: false, reason: "TELEGRAM_GROUP_ID not set" };
 
-        // Notify owner channel (full details)
-        if (env.TELEGRAM_CHANNEL_ID) {
-          await sendTelegramMessage(env, env.TELEGRAM_CHANNEL_ID, fullMsg);
-        }
-
-        // Notify group chat (premium clean format — no card/gate data)
-        if (env.TELEGRAM_GROUP_ID) {
-          await sendTelegramMessage(env, env.TELEGRAM_GROUP_ID, premiumGroupMsg);
-        }
-
-        return json({ ok: true, total: totalHits }, { headers: cors });
+        return json({
+          ok: true,
+          total: totalHits,
+          notifications: {
+            personal: personalResult,
+            channel:  channelResult,
+            group:    groupResult,
+          },
+          bot_token_present:  !!env.TELEGRAM_BOT_TOKEN,
+          bot_token_length:   env.TELEGRAM_BOT_TOKEN ? env.TELEGRAM_BOT_TOKEN.length : 0,
+          channel_id_present: !!env.TELEGRAM_CHANNEL_ID,
+          group_id_present:   !!env.TELEGRAM_GROUP_ID,
+        }, { headers: cors });
       }
 
       // ── GET /stats ───────────────────────────────────────────────────────
