@@ -1,0 +1,19 @@
+name = "tg-login-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# Replace ALLOWED_ORIGIN with your Pages URL (or custom domain).
+[vars]
+ALLOWED_ORIGIN = "https://tg-login.pages.dev"
+
+# Fill database_id after: wrangler d1 create tg_login_db
+[[d1_databases]]
+binding = "DB"
+database_name = "tg_login_db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+# Secrets set via `wrangler secret put`:
+#   TELEGRAM_BOT_TOKEN
+#   TELEGRAM_BOT_USERNAME
+#   SESSION_SECRET
+#   ADMIN_TELEGRAM_IDS   (comma-separated)
