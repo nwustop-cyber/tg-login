@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <strong>Telegram Dashboard</strong>
+    <div class="right">
+      <span id="whoami" class="muted"></span>
+      <button id="logout">Log out</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="me-card" class="card"></section>
+    <section id="admin-card" class="card hidden">
+      <h2>Users</h2>
+      <div class="table-wrap">
+        <table id="users">
+          <thead>
+            <tr>
+              <th></th><th>ID</th><th>Username</th><th>Name</th>
+              <th>Source</th><th>Logins</th><th>Last login</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/config.js"></script>
+  <script>
+    const API = window.APP_CONFIG.API_BASE;
+
+    const fmt = (t) => new Date(t * 1000).toLocaleString();
+
+    (async () => {
+      const r = await fetch(API + "/me", { credentials: "include" });
+      const { user } = await r.json();
+      if (!user) return (location.href = "/");
+
+      document.getElementById("whoami").textContent =
+        "@" + (user.username || user.name || user.sub);
+
+      document.getElementById("me-card").innerHTML = `
+        <div class="me">
+          ${user.photo ? `<img src="${user.photo}" class="avatar" />` : ""}
+          <div>
+            <h2>${user.name || "User"}</h2>
+            <p class="muted">Telegram ID: ${user.sub}
+              ${user.is_admin ? '<span class="badge">admin</span>' : ""}</p>
+          </div>
+        </div>`;
+
+      if (user.is_admin) {
+        const ar = await fetch(API + "/admin/users", { credentials: "include" });
+        const { users } = await ar.json();
+        const tbody = document.querySelector("#users tbody");
+        tbody.innerHTML = users.map((u) => `
+          <tr>
+            <td>${u.photo_url ? `<img src="${u.photo_url}" class="avatar sm"/>` : ""}</td>
+            <td>${u.telegram_id}</td>
+            <td>${u.username ? "@" + u.username : ""}</td>
+            <td>${[u.first_name, u.last_name].filter(Boolean).join(" ")}</td>
+            <td>${u.source}</td>
+            <td>${u.login_count}</td>
+            <td>${fmt(u.last_login)}</td>
+          </tr>`).join("");
+        document.getElementById("admin-card").classList.remove("hidden");
+      }
+    })();
+
+    document.getElementById("logout").onclick = async () => {
+      await fetch(API + "/logout", { method: "POST", credentials: "include" });
+      location.href = "/";
+    };
+  </script>
+</body>
+</html>
