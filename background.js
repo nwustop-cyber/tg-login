@@ -3979,10 +3979,19 @@ async function funcFreeIpFraudCheck(ip, ipqsKey) {
     ipinfo: _fraudFetchJson('https://ipinfo.io/' + encodeURIComponent(ip) + '/json', 5000),
     spamhaus: rev ? _fraudFetchJson('https://dns.google/resolve?name=' + rev + '.zen.spamhaus.org&type=A', 5000) : Promise.resolve(null)
   };
-  // Optional enrichment providers (keep prior behavior if a key is passed).
-  if (ipqsKey && /^[A-Za-z0-9]{16,}$/.test(ipqsKey)) {
-    jobs.ipqs = _fraudFetchJson('https://ipqualityscore.com/api/json/ip/' + encodeURIComponent(ipqsKey) + '/' + encodeURIComponent(ip) + '?strictness=1&allow_public_access_points=true', 6000);
-  }
+  // IPQS enrichment — routed through Cloudflare Worker so the API key stays
+  // server-side. `ipqsKey` param is now ignored; the Worker injects the key.
+  jobs.ipqs = (async () => {
+    try {
+      const stored = await new Promise(r => chrome.storage.local.get('tg_token', r));
+      if (!stored.tg_token) return null; // not logged in — skip IPQS enrichment
+      const r2 = await fetch(_DAEMON_API + '/proxy/ipqs?ip=' + encodeURIComponent(ip), {
+        headers: { 'Authorization': 'Bearer ' + stored.tg_token }
+      });
+      if (!r2.ok) return null;
+      return await r2.json();
+    } catch { return null; }
+  })();
   jobs.proxycheck = _fraudFetchJson('https://proxycheck.io/v2/' + encodeURIComponent(ip) + '?vpn=1&risk=1', 5000);
   const keys = Object.keys(jobs);
   const settled = await Promise.allSettled(keys.map(k => jobs[k]));

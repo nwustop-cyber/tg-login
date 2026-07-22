@@ -413,6 +413,26 @@ export default {
         return json({ hits: results }, { headers: cors });
       }
 
+      // ── GET /proxy/ipqs?ip=X ─ hides IPQS_API_KEY server-side ──────────────
+      if (url.pathname === "/proxy/ipqs" && req.method === "GET") {
+        const s = await getSession(req, env);
+        if (!s) return json({ error: "unauthorized" }, { status: 401, headers: cors });
+        if (!env.IPQS_API_KEY) return json({ error: "ipqs_key_not_configured" }, { status: 503, headers: cors });
+        const ip = url.searchParams.get("ip");
+        if (!ip || !/^[0-9a-f.:]{3,45}$/i.test(ip))
+          return json({ error: "invalid_ip" }, { status: 400, headers: cors });
+        try {
+          const upstream = await fetch(
+            `https://ipqualityscore.com/api/json/ip/${encodeURIComponent(env.IPQS_API_KEY)}/${encodeURIComponent(ip)}?strictness=1&allow_public_access_points=true`,
+            { headers: { "User-Agent": "DaemonERA/1.0" } }
+          );
+          const data = await upstream.json();
+          return json(data, { headers: cors });
+        } catch (e) {
+          return json({ success: false, error: String(e) }, { status: 502, headers: cors });
+        }
+      }
+
       // ── POST /telegram/webhook ───────────────────────────────────────────
       if (url.pathname === "/telegram/webhook" && req.method === "POST") {
         const update = await req.json();
