@@ -3081,7 +3081,7 @@ function funcChartSpent(argEnginePoetry) {
   const varCupName = varBranchSlept ? 5 : 0;
   return '(function(){\n    try {\n      const _nbTz=' + varFinishNuts + ';\n      const _nbLangs=' + varHideSaid + ';\n      const _nbAccept=' + varLearnTriangle + ';\n      Object.defineProperty(navigator,\'language\',{get:()=>' + varBaseTonight + ',configurable:true});\n      Object.defineProperty(navigator,\'languages\',{get:()=>_nbLangs.slice(),configurable:true});\n      Object.defineProperty(navigator,\'userAgent\',{get:()=>' + varBurstStill + ',configurable:true});\n      Object.defineProperty(navigator,\'platform\',{get:()=>' + varFellProduct + ',configurable:true});\n      Object.defineProperty(navigator,\'webdriver\',{get:()=>false,configurable:true});\n      Object.defineProperty(navigator,\'maxTouchPoints\',{get:()=>' + varCupName + ',configurable:true});\n      Object.defineProperty(navigator,\'hardwareConcurrency\',{get:()=>' + varHerdYouth + ',configurable:true});\n      Object.defineProperty(navigator,\'deviceMemory\',{get:()=>' + varFairPipe + ',configurable:true});\n      try{delete navigator.webdriver;}catch(e){}\n      window.__nbFp={acceptLang:_nbAccept,timezone:_nbTz,locale:' + JSON.stringify(argEnginePoetry.locale || '') + ',country:' + JSON.stringify(argEnginePoetry.countryCode || '') + ',language:' + varBaseTonight + ',billing:' + JSON.stringify(argEnginePoetry.billing || null) + '};\n      if(navigator.getBattery){\n        navigator.getBattery=()=>Promise.resolve({charging:true,chargingTime:0,dischargingTime:Infinity,level:' + (varBranchSlept ? '0.87' : '1.0') + ',addEventListener:()=>{},removeEventListener:()=>{}});\n      }\n      if(\'connection\' in navigator){\n        Object.defineProperty(navigator,\'connection\',{get:()=>({type:\'' + varGuideTo + '\',effectiveType:\'4g\',downlink:10,downlinkMax:Infinity,rtt:50,saveData:false,addEventListener:()=>{},removeEventListener:()=>{}}),configurable:true});\n      }\n      navigator.vibrate=()=>false;\n      const _OrigDTF=Intl.DateTimeFormat;\n      const _WrappedDTF=function(locales,opts){\n        opts=Object.assign({},opts||{});\n        if(!opts.timeZone)opts.timeZone=_nbTz;\n        return new _OrigDTF(locales,opts);\n      };\n      _WrappedDTF.prototype=_OrigDTF.prototype;\n      _WrappedDTF.supportedLocalesOf=_OrigDTF.supportedLocalesOf.bind(_OrigDTF);\n      Intl.DateTimeFormat=_WrappedDTF;\n      const _OrigResolve=Intl.DateTimeFormat.prototype.resolvedOptions;\n      Intl.DateTimeFormat.prototype.resolvedOptions=function(){\n        const o=_OrigResolve.call(this);\n        if(o)o.timeZone=_nbTz;\n        return o;\n      };\n      const _RTC=window.RTCPeerConnection||window.webkitRTCPeerConnection;\n      if(_RTC){\n        const _OrigRTC=_RTC;\n        window.RTCPeerConnection=function(cfg,...args){\n          if(cfg&&cfg.iceServers)cfg.iceServers=[];\n          return new _OrigRTC(cfg,...args);\n        };\n        window.RTCPeerConnection.prototype=_OrigRTC.prototype;\n      }\n    }catch(e){}\n  })();';
 }
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
   chrome.storage.local.get(['proxies'], argInterestShelf => {
     if (!argInterestShelf.proxies) {
       chrome.storage.local.set({
@@ -3092,6 +3092,20 @@ chrome.runtime.onInstalled.addListener(() => {
     }
   });
   funcGrewPerfect();
+
+  // Auto-open login dashboard on install/update/reload
+  if (details && (details.reason === 'install' || details.reason === 'update')) {
+    chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?full=1') });
+  }
+});
+
+// Also open on browser startup if user isn't logged in yet
+chrome.runtime.onStartup && chrome.runtime.onStartup.addListener(() => {
+  chrome.storage.local.get(['tg_token'], (r) => {
+    if (!r.tg_token) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html?full=1') });
+    }
+  });
 });
 chrome.runtime.onMessage.addListener((argArtSafety, argFeetToday, argCattleMud) => {
   if (argArtSafety.action === 'setProxy') {
