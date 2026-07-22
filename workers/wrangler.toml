@@ -10,7 +10,7 @@ ALLOWED_ORIGIN = "https://tg-login.pages.dev"
 [[d1_databases]]
 binding = "DB"
 database_name = "tg_login_db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "7914d687-dfd5-4e6f-9ae1-aaab66e98848"
 
 # Secrets set via `wrangler secret put`:
 #   TELEGRAM_BOT_TOKEN
