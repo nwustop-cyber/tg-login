@@ -868,6 +868,10 @@ body {
     <div class="nav-section">Utilities</div>
     <div class="nav-item" data-panel="ipfraud">IP Fraud Check</div>
     <div class="nav-item" data-panel="tempmail">Temp Mail</div>
+
+    <div class="nav-section">Telegram</div>
+    <div class="nav-item" id="btnTestHit" style="color:#3fb950">🎯 Send Test Hit</div>
+    <div class="nav-item" id="btnOpenDashboard" style="color:#79b8ff">🖥 Open Dashboard</div>
   </nav>
 </aside>
 
@@ -938,61 +942,106 @@ body {
       </div>
     </div>
     <div id="viewMain" style="display:none">
-      <div class="panel-title-row">
-        <div>
-          <div class="panel-title">Dashboard</div>
-          <div class="panel-sub">Account summary, hits, and quick access to tools</div>
-        </div>
-        <button class="btn btn-secondary btn-sm" id="btnRefresh">↺ Refresh</button>
+
+      <!-- ── TABS ─────────────────────────────────────────── -->
+      <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:0">
+        <button class="dm-tab active" data-tab="overview" style="flex:1;background:none;border:0;border-bottom:2px solid var(--gold);color:var(--gold);padding:7px 4px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.05em">&#9737; OVERVIEW</button>
+        <button class="dm-tab" data-tab="users" style="flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:7px 4px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.05em">&#128101; USERS</button>
+        <button class="dm-tab" data-tab="hits" style="flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:7px 4px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.05em">&#127919; HITS</button>
+        <button class="btn btn-secondary btn-sm" id="btnRefresh" style="padding:4px 8px;font-size:10px">&#8634;</button>
       </div>
 
-      <div class="stats-row">
-        <div class="sbox">
-          <div class="sval" id="statSuccess">0</div>
-          <div class="slbl">Total Hits</div>
+      <!-- ── TAB: OVERVIEW ────────────────────────────────── -->
+      <div class="dm-tab-panel active" id="dm-tab-overview">
+        <div class="stats-row">
+          <div class="sbox">
+            <div class="sval accent" id="statSuccess">0</div>
+            <div class="slbl">Total Hits</div>
+          </div>
+          <div class="sbox">
+            <div class="sval" id="statHits">0</div>
+            <div class="slbl">Today</div>
+          </div>
+          <div class="sbox">
+            <div class="sval amber" id="statSpoof">0</div>
+            <div class="slbl">Users</div>
+          </div>
         </div>
-        <div class="sbox">
-          <div class="sval accent" id="statHits">∞</div>
-          <div class="slbl">Daily Hits</div>
-        </div>
-        <div class="sbox">
-          <div class="sval amber" id="statSpoof">∞</div>
-          <div class="slbl">Spoof Uses</div>
+
+        <div class="card" style="padding:14px 12px 16px">
+          <div class="qa-block">
+            <div class="qa-header"><span class="qa-title">Card Tools</span></div>
+            <div class="qa-grid">
+              <div class="qa-btn" data-panel="bingen"><span class="qa-lbl">BIN Generator</span></div>
+              <div class="qa-btn" data-panel="binlookup"><span class="qa-lbl">BIN Lookup</span></div>
+              <div class="qa-btn" data-panel="bulkbin"><span class="qa-lbl">Bulk BIN</span></div>
+              <div class="qa-btn" data-panel="cardfilter"><span class="qa-lbl">Card Filter</span></div>
+            </div>
+          </div>
+          <div class="qa-block">
+            <div class="qa-header"><span class="qa-title">Gate Tools</span></div>
+            <div class="qa-grid">
+              <div class="qa-btn" data-panel="gatehealth"><span class="qa-lbl">Gate Health</span></div>
+              <div class="qa-btn" data-panel="gatetester"><span class="qa-lbl">Gate Tester</span></div>
+            </div>
+          </div>
+          <div class="qa-block">
+            <div class="qa-header"><span class="qa-title">Network</span></div>
+            <div class="qa-grid">
+              <div class="qa-btn" data-panel="proxy"><span class="qa-lbl">Proxy Manager</span></div>
+              <div class="qa-btn" data-panel="spoof"><span class="qa-lbl">Fingerprint</span></div>
+            </div>
+          </div>
+          <div class="qa-block">
+            <div class="qa-header"><span class="qa-title">Utilities</span></div>
+            <div class="qa-grid">
+              <div class="qa-btn" data-panel="ipfraud"><span class="qa-lbl">IP Fraud Check</span></div>
+              <div class="qa-btn" data-panel="tempmail"><span class="qa-lbl">Temp Mail</span></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card" style="padding:16px 14px 18px">
-        <div class="qa-block">
-          <div class="qa-header"><span class="qa-title">Card Tools</span></div>
-          <div class="qa-grid">
-            <div class="qa-btn" data-panel="bingen"><span class="qa-lbl">BIN Generator</span></div>
-            <div class="qa-btn" data-panel="binlookup"><span class="qa-lbl">BIN Lookup</span></div>
-            <div class="qa-btn" data-panel="bulkbin"><span class="qa-lbl">Bulk BIN</span></div>
-            <div class="qa-btn" data-panel="cardfilter"><span class="qa-lbl">Card Filter</span></div>
-          </div>
+      <!-- ── TAB: USERS ──────────────────────────────────── -->
+      <div class="dm-tab-panel" id="dm-tab-users" style="display:none">
+        <input id="dm-user-search" placeholder="Search name / username…"
+          style="width:100%;background:rgba(8,7,16,.7);border:1px solid var(--border);border-radius:8px;
+                 color:var(--text);font-size:12px;padding:8px 11px;outline:none;margin-bottom:10px">
+        <div id="dm-users-wrap" style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <thead>
+              <tr style="color:var(--gold);opacity:.8">
+                <th style="padding:6px 8px;text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">User</th>
+                <th style="padding:6px 8px;text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">ID</th>
+                <th style="padding:6px 8px;text-align:center;font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">Hits</th>
+                <th style="padding:6px 8px;text-align:center;font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">Logins</th>
+                <th style="padding:6px 8px;text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">Source</th>
+              </tr>
+            </thead>
+            <tbody id="dm-users-body"></tbody>
+          </table>
         </div>
-        <div class="qa-block">
-          <div class="qa-header"><span class="qa-title">Gate Tools</span></div>
-          <div class="qa-grid">
-            <div class="qa-btn" data-panel="gatehealth"><span class="qa-lbl">Gate Health</span></div>
-            <div class="qa-btn" data-panel="gatetester"><span class="qa-lbl">Gate Tester</span></div>
-          </div>
-        </div>
-        <div class="qa-block">
-          <div class="qa-header"><span class="qa-title">Network</span></div>
-          <div class="qa-grid">
-            <div class="qa-btn" data-panel="proxy"><span class="qa-lbl">Proxy Manager</span></div>
-            <div class="qa-btn" data-panel="spoof"><span class="qa-lbl">Fingerprint</span></div>
-          </div>
-        </div>
-        <div class="qa-block">
-          <div class="qa-header"><span class="qa-title">Utilities</span></div>
-          <div class="qa-grid">
-            <div class="qa-btn" data-panel="ipfraud"><span class="qa-lbl">IP Fraud Check</span></div>
-            <div class="qa-btn" data-panel="tempmail"><span class="qa-lbl">Temp Mail</span></div>
-          </div>
-        </div>
+        <div id="dm-users-empty" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;display:none">No users found</div>
       </div>
+
+      <!-- ── TAB: HITS ───────────────────────────────────── -->
+      <div class="dm-tab-panel" id="dm-tab-hits" style="display:none">
+        <div id="dm-hits-wrap">
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <thead>
+              <tr style="color:var(--gold);opacity:.8">
+                <th style="padding:6px 8px;text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">User</th>
+                <th style="padding:6px 8px;text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">Gate</th>
+                <th style="padding:6px 8px;text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">Amount</th>
+                <th style="padding:6px 8px;text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">Time</th>
+              </tr>
+            </thead>
+            <tbody id="dm-hits-body"></tbody>
+          </table>
+        </div>
+        <div id="dm-hits-empty" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;display:none">No hits yet</div>
+      </div>
+
     </div>
   </div>
 
