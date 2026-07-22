@@ -2,5 +2,5 @@
 // and use a build step to substitute. Simplest: just hardcode.
 window.APP_CONFIG = {
   BOT_USERNAME: "Daemon_T_bot",              // without the @
-  API_BASE:     "https://tg-login-api.YOURSUB.workers.dev",
+  API_BASE:     "https://tg-login-api.water6k.workers.dev",
 };
