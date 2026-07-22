@@ -256,9 +256,18 @@ export default {
         const hitRow = await env.DB.prepare("SELECT COUNT(*) as c FROM hits WHERE telegram_id=?").bind(s.sub).first();
         const totalHits = hitRow?.c || 1;
 
-        // Format names / identifiers
-        const uname   = user?.username ? `@${user.username}` : null;
-        const name    = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || uname || `ID: ${s.sub}`;
+        // Escape Markdown special chars in user-provided strings
+        // (underscores, asterisks, backticks, square brackets break Markdown parsing)
+        const escMd = (s) => String(s || "").replace(/([_*`\[\]])/g, "\\$1");
+
+        // Format names / identifiers (all escaped for Markdown safety)
+        const rawUname = user?.username ? `@${user.username}` : null;
+        const rawName  = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || rawUname || `ID: ${s.sub}`;
+        const uname   = rawUname ? escMd(rawUname) : null;
+        const name    = escMd(rawName);
+        const gateEsc = escMd(gate || "Unknown");
+        const amountEsc = amount ? escMd(amount) : null;
+        const cardEsc   = escMd(cardDisplay);
         const ts      = new Date(now * 1000).toLocaleString("en-GB", { timeZone: "UTC",
           day: "2-digit", month: "short", year: "numeric",
           hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " UTC";
@@ -269,26 +278,26 @@ export default {
           `━━━━━━━━━━━━━━━━━━\n` +
           `👤 *Name:* ${name}\n` +
           (uname ? `🆔 *Username:* ${uname}\n` : `🆔 *ID:* ${s.sub}\n`) +
-          `💳 *Card:* \`${cardDisplay}\`\n` +
-          `🏪 *Gate:* ${gate || "Unknown"}\n` +
-          (amount ? `💰 *Amount:* ${amount}\n` : "") +
+          `💳 *Card:* \`${cardEsc}\`\n` +
+          `🏪 *Gate:* ${gateEsc}\n` +
+          (amountEsc ? `💰 *Amount:* ${amountEsc}\n` : "") +
           `📊 *Total hits:* ${totalHits}\n` +
-          `⏰ *Time:* ${ts}\n` +
+          `⏰ *Time:* ${escMd(ts)}\n` +
           `━━━━━━━━━━━━━━━━━━`;
 
         // ── Premium group message → name/ID + amount + attempts + time only
         const premiumGroupMsg =
-          `🔥 *━━━━━━━━━━━━━━━━━━━* 🔥\n` +
+          `🔥 ━━━━━━━━━━━━━━━━━━━ 🔥\n` +
           `👹  *D A E M O N  •  H I T*\n` +
-          `🔥 *━━━━━━━━━━━━━━━━━━━* 🔥\n` +
+          `🔥 ━━━━━━━━━━━━━━━━━━━ 🔥\n` +
           `\n` +
           `👤  *${name}*\n` +
           (uname ? `🆔  ${uname}\n` : `🆔  \`${s.sub}\`\n`) +
-          `🪙  *${amount || "N/A"}*\n` +
+          `🪙  *${amountEsc || "N/A"}*\n` +
           `🎯  Attempt  *#${totalHits}*\n` +
-          `⏰  ${ts}\n` +
+          `⏰  ${escMd(ts)}\n` +
           `\n` +
-          `🔥 *━━━━━━━━━━━━━━━━━━━* 🔥`;
+          `🔥 ━━━━━━━━━━━━━━━━━━━ 🔥`;
 
         // Notify all 3 destinations — capture results for debugging
         const personalResult = await sendTelegramMessage(env, s.sub, fullMsg);
