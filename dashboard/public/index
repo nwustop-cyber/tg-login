@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Login · Telegram Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="card">
+    <h1>Welcome</h1>
+    <p class="muted">Sign in with your Telegram account to continue.</p>
+
+    <div id="tg-login-container"></div>
+
+    <p id="status" class="muted"></p>
+  </main>
+
+  <script src="/config.js"></script>
+  <script>
+    // Inject the official Telegram Login Widget.
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://telegram.org/js/telegram-widget.js?22";
+    s.setAttribute("data-telegram-login", window.APP_CONFIG.BOT_USERNAME);
+    s.setAttribute("data-size", "large");
+    s.setAttribute("data-radius", "8");
+    s.setAttribute("data-request-access", "write");
+    s.setAttribute("data-onauth", "onTelegramAuth(user)");
+    document.getElementById("tg-login-container").appendChild(s);
+
+    window.onTelegramAuth = async (user) => {
+      document.getElementById("status").textContent = "Verifying…";
+      const r = await fetch(window.APP_CONFIG.API_BASE + "/auth/telegram", {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(user),
+      });
+      if (r.ok) location.href = "/dashboard.html";
+      else document.getElementById("status").textContent = "Login failed.";
+    };
+  </script>
+</body>
+</html>
