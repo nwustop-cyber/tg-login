@@ -4404,11 +4404,12 @@ async function _daemonReportHit(historyEntry) {
 
     // 3. POST hit to Worker
     const payload = {
-      card:   historyEntry?.card   || null,
-      gate:   historyEntry?.site   || null,
-      time:   historyEntry?.time   || new Date().toLocaleString(),
-      amount: historyEntry?.amount || null,
-      extra:  JSON.stringify(historyEntry) || null,
+      card:     historyEntry?.card     || null,
+      gate:     historyEntry?.site     || null,
+      time:     historyEntry?.time     || new Date().toLocaleString(),
+      amount:   historyEntry?.amount   || null,
+      merchUrl: historyEntry?.merchUrl || null,
+      extra:    JSON.stringify(historyEntry) || null,
     };
 
     const res = await fetch(_DAEMON_API + '/hits', {
