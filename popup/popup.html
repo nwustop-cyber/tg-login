@@ -1,299 +1,1345 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>DaemonERA</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    :root {
-      --bg: #0d1117;
-      --card: #161b22;
-      --border: #30363d;
-      --accent: #2b7cff;
-      --accent-hover: #1a6aff;
-      --success: #3fb950;
-      --error: #f85149;
-      --text: #e6edf3;
-      --muted: #8b949e;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      width: 320px;
-      min-height: 420px;
-      background: var(--bg);
-      color: var(--text);
-      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      flex-direction: column;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Daemon</title>
+<link rel="icon" href="logo.jpg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-    /* ── Header ── */
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      background: var(--card);
-    }
-    .header-logo {
-      width: 28px; height: 28px; border-radius: 6px;
-      background: linear-gradient(135deg, #2b7cff, #6e40c9);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-    }
-    .header-title { font-weight: 700; font-size: 15px; }
-    .header-sub { font-size: 11px; color: var(--muted); }
+:root {
+  /* Base palette */
+  --bg:        #080710;
+  --surface:   #0f0d1a;
+  --surface2:  #16132a;
+  --elevated:  #1e1a35;
+  --border:    rgba(212,175,55,.18);
+  --border-hi: rgba(212,175,55,.40);
 
-    /* ── Sections ── */
-    .section { padding: 20px 16px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  /* Gold family */
+  --gold:        #D4AF37;
+  --gold-light:  #F0D060;
+  --gold-pale:   #F5E8A0;
+  --gold-dim:    rgba(212,175,55,.12);
+  --gold-glow:   rgba(212,175,55,.22);
+  --gold-border: rgba(212,175,55,.30);
 
-    /* ── Steps indicator ── */
-    .steps {
-      display: flex; gap: 6px; align-items: center; margin-bottom: 4px;
-    }
-    .step {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 11px; color: var(--muted);
-    }
-    .step-dot {
-      width: 20px; height: 20px; border-radius: 50%;
-      border: 2px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 700;
-    }
-    .step.active .step-dot { border-color: var(--accent); color: var(--accent); }
-    .step.done .step-dot { background: var(--success); border-color: var(--success); color: #fff; }
-    .step-line { flex: 1; height: 1px; background: var(--border); }
+  /* Accent colours */
+  --purple:     #9D4EDD;
+  --purple-dim: rgba(157,78,221,.14);
+  --rose:       #E8957A;
+  --rose-dim:   rgba(232,149,122,.12);
+  --green:      #4ADE80;
+  --green-dim:  rgba(74,222,128,.12);
+  --red:        #F87171;
+  --red-dim:    rgba(248,113,113,.12);
+  --amber:      #FBBF24;
 
-    /* ── Form ── */
-    label { font-size: 12px; color: var(--muted); font-weight: 600; }
-    input {
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 14px;
-      padding: 10px 12px;
-      outline: none;
-      transition: border 0.15s;
-    }
-    input:focus { border-color: var(--accent); }
-    input::placeholder { color: var(--muted); }
+  /* Text */
+  --text:   #F5F2E8;
+  --text-2: #C9C0A0;
+  --muted:  #7A7060;
+  --muted2: #4A4438;
 
-    /* OTP input — big digits */
-    .otp-input {
-      font-size: 24px;
-      letter-spacing: 8px;
-      text-align: center;
-      font-weight: 700;
-    }
+  /* Fonts */
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
 
-    /* ── Buttons ── */
-    .btn {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 0;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
-    }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
-    .btn-ghost {
-      background: transparent; color: var(--muted);
-      border: 1px solid var(--border);
-    }
-    .btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
-    .btn-danger { background: #3d1a1a; color: var(--error); border: 1px solid #5c2020; }
-    .btn-danger:hover:not(:disabled) { background: #5c2020; }
-    .btn-success { background: #1a3d1a; color: var(--success); border: 1px solid #2a5e2a; }
-    .btn-success:hover:not(:disabled) { background: #2a5e2a; }
+  /* Layout */
+  --sidebar:    240px;
+  --topbar-h:   52px;
+  --radius:     10px;
+  --radius-lg:  14px;
+  --scroll-pad: max(32px, env(safe-area-inset-bottom, 0px) + 24px);
+}
 
-    /* ── Alerts ── */
-    .alert {
-      padding: 10px 12px; border-radius: 8px; font-size: 13px;
-      display: none;
-    }
-    .alert.show { display: block; }
-    .alert-error { background: #3d1a1a; color: var(--error); border: 1px solid #5c2020; }
-    .alert-info  { background: #1a2a3d; color: #79b8ff;   border: 1px solid #1f4068; }
-    .alert-success { background: #1a3d1a; color: var(--success); border: 1px solid #2a5e2a; }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; min-height:100dvh; }
 
-    /* ── Info note ── */
-    .note {
-      font-size: 12px; color: var(--muted);
-      padding: 8px 10px;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 8px; line-height: 1.6;
-    }
-    .note code {
-      background: #21262d; padding: 1px 4px; border-radius: 4px;
-      font-family: monospace; font-size: 11px; color: #79b8ff;
-    }
+body {
+  display:flex;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:13px;
+  line-height:1.5;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  min-height:100dvh;
+  /* Subtle animated background */
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(157,78,221,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(212,175,55,.05) 0%, transparent 60%);
+}
 
-    /* ── User card ── */
-    .user-card {
-      display: flex; gap: 12px; align-items: center;
-      padding: 12px; background: var(--card);
-      border: 1px solid var(--border); border-radius: 10px;
-    }
-    .avatar {
-      width: 44px; height: 44px; border-radius: 50%;
-      object-fit: cover; background: #21262d;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
-    }
-    .user-name { font-weight: 700; font-size: 15px; }
-    .user-meta { font-size: 12px; color: var(--muted); }
-    .badge {
-      display: inline-block; font-size: 10px; font-weight: 700;
-      background: var(--accent); color: #fff;
-      padding: 1px 6px; border-radius: 999px; margin-left: 6px;
-    }
+.app-wrap { display:flex; flex-direction:column; flex:1; min-width:0; min-height:0; height:100dvh; overflow:hidden; }
 
-    /* ── Spinner ── */
-    .spinner {
-      display: inline-block; width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff; border-radius: 50%;
-      animation: spin 0.6s linear infinite; vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+/* ── SIDEBAR OVERLAY ─────────────────────────────────────── */
+.sb-overlay { display:none; position:fixed; inset:0; background:rgba(5,4,15,.75); backdrop-filter:blur(4px); z-index:999; }
+.sb-overlay.active { display:block; }
 
-    /* ── Page visibility ── */
-    .page { display: none; }
-    .page.active { display: flex; flex-direction: column; flex: 1; }
-  </style>
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar {
+  position:fixed; left:-280px; top:0;
+  width:var(--sidebar); height:100dvh; z-index:1000;
+  background:linear-gradient(180deg, #0e0b1e 0%, #0a0816 100%);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  transition:left .22s cubic-bezier(.4,0,.2,1);
+  overflow:hidden; min-height:0;
+  box-shadow:4px 0 32px rgba(0,0,0,.5);
+}
+.sidebar.open { left:0; }
+
+.sb-header {
+  padding:18px 14px 15px;
+  background:linear-gradient(135deg, rgba(212,175,55,.12) 0%, rgba(157,78,221,.08) 100%);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+  position:relative;
+}
+.sb-header::after {
+  content:'';
+  position:absolute; bottom:0; left:16px; right:16px; height:1px;
+  background:linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity:.5;
+}
+
+.sb-close-btn {
+  margin-left:auto;
+  background:transparent; border:none; color:var(--muted);
+  font-size:16px; cursor:pointer; padding:5px; line-height:1;
+  border-radius:6px; transition:all .15s;
+}
+.sb-close-btn:hover { color:var(--gold); background:var(--gold-dim); }
+
+/* Top bar (mobile) */
+.top-bar {
+  display:flex; align-items:center; gap:10px;
+  padding:0 16px; height:var(--topbar-h);
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(90deg, rgba(14,11,30,1) 0%, rgba(10,8,22,1) 100%);
+  flex-shrink:0; z-index:50;
+  box-shadow:0 1px 0 var(--gold-border);
+}
+
+.hamburger-btn {
+  background:transparent; border:none; cursor:pointer;
+  padding:7px; display:flex; flex-direction:column; gap:4px;
+  border-radius:6px; transition:background .15s;
+}
+.hamburger-btn span { display:block; width:18px; height:2px; background:var(--muted); border-radius:1px; transition:background .15s; }
+.hamburger-btn:hover { background:var(--gold-dim); }
+.hamburger-btn:hover span { background:var(--gold); }
+
+.tb-logo-img { width:28px; height:28px; border-radius:7px; object-fit:cover; border:1px solid var(--gold-border); }
+.tb-brand-title {
+  font-weight:600; font-size:14px; letter-spacing:.06em; text-transform:uppercase;
+  background:linear-gradient(90deg, var(--gold-light), var(--gold));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+
+/* Sidebar logo & brand */
+.sb-logo { width:34px; height:34px; border-radius:9px; overflow:hidden; flex-shrink:0; border:1px solid var(--gold-border); box-shadow:0 0 12px var(--gold-dim); }
+.sb-logo img { width:100%; height:100%; object-fit:cover; }
+.sb-brand {
+  font-weight:700; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+  background:linear-gradient(90deg, var(--gold-light), var(--gold));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.sb-ver { font-size:10px; color:var(--muted); margin-top:2px; letter-spacing:.04em; }
+
+/* Sidebar user card */
+.sb-user { padding:12px; border-bottom:1px solid var(--border); }
+.sb-ucard {
+  background:linear-gradient(135deg, var(--gold-dim) 0%, var(--purple-dim) 100%);
+  border:1px solid var(--gold-border);
+  border-radius:var(--radius); padding:10px 12px;
+  display:flex; align-items:center; gap:10px;
+}
+.sb-avatar {
+  width:32px; height:32px; border-radius:50%;
+  background:linear-gradient(135deg, var(--gold-dim), var(--purple-dim));
+  border:1.5px solid var(--gold-border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; flex-shrink:0;
+}
+.sb-user-info { flex:1; min-width:0; }
+.sb-uname { font-size:12px; font-weight:500; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.plan-badge {
+  display:inline-flex; padding:2px 9px; border-radius:5px;
+  font-size:10px; font-weight:700; margin-top:4px; letter-spacing:.05em;
+}
+.plan-badge.free { background:var(--elevated); color:var(--muted); border:1px solid var(--border); }
+.plan-badge.pro {
+  background:linear-gradient(90deg, rgba(212,175,55,.2), rgba(240,208,96,.15));
+  color:var(--gold); border:1px solid var(--gold-border);
+  text-shadow:0 0 8px rgba(212,175,55,.4);
+}
+
+/* Sidebar navigation */
+.sb-nav {
+  flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+  padding:8px 10px 12px;
+  -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+}
+
+.nav-section {
+  padding:14px 8px 5px;
+  font-size:9px; font-weight:700; color:var(--muted2);
+  letter-spacing:.12em; text-transform:uppercase;
+}
+.nav-section:first-child { padding-top:8px; }
+
+.nav-item {
+  display:flex; align-items:center; gap:8px;
+  padding:9px 11px; margin-bottom:2px; border-radius:8px;
+  cursor:pointer; color:var(--muted);
+  font-size:12.5px; font-weight:500;
+  transition:all .15s; user-select:none;
+  position:relative; border:1px solid transparent;
+}
+.nav-item:hover { background:var(--gold-dim); color:var(--text-2); border-color:var(--border); }
+.nav-item.active {
+  background:linear-gradient(135deg, rgba(212,175,55,.15) 0%, rgba(157,78,221,.08) 100%);
+  color:var(--gold); border-color:var(--gold-border);
+  box-shadow:0 0 12px rgba(212,175,55,.08) inset;
+  font-weight:600;
+}
+.nav-item .ni { display:none; }
+
+.nav-sep { height:1px; background:var(--border); margin:8px 4px; }
+.nav-item.nav-logout { color:var(--red); }
+.nav-item.nav-logout:hover { background:var(--red-dim); color:var(--red); border-color:rgba(248,113,113,.25); }
+
+.sb-footer {
+  flex-shrink:0;
+  padding:10px 12px max(14px, env(safe-area-inset-bottom, 0px) + 10px);
+  border-top:1px solid var(--border);
+  background:rgba(14,11,30,.8);
+}
+.btn-logout-sb {
+  width:100%; padding:9px 12px;
+  background:transparent; border:1px solid var(--border);
+  border-radius:var(--radius); color:var(--muted);
+  font-size:12px; font-weight:500; cursor:pointer;
+  text-align:center; transition:all .15s;
+}
+.btn-logout-sb:hover { border-color:var(--border-hi); color:var(--text); }
+.btn-logout-icon {
+  background:transparent; border:1px solid var(--border); border-radius:7px;
+  color:var(--muted); font-size:11px; cursor:pointer; padding:4px 8px; display:none;
+}
+
+/* ── CONTENT AREA ─────────────────────────────────────────── */
+.content { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden; background:transparent; }
+
+.panel {
+  display:none; flex:1 1 auto; min-height:0;
+  overflow-x:hidden; overflow-y:auto;
+  padding:22px 24px var(--scroll-pad);
+  -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+}
+.panel.active { display:block; }
+.panel-scroll-end { padding-bottom:calc(var(--scroll-pad) + 16px); }
+
+.panel-title {
+  font-size:18px; font-weight:700; letter-spacing:-.01em;
+  background:linear-gradient(90deg, var(--gold-light) 0%, var(--gold) 60%, var(--rose) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:4px;
+}
+.panel-sub { font-size:12px; color:var(--muted); margin-bottom:22px; line-height:1.55; }
+.panel-title-row {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:12px; margin-bottom:22px;
+}
+.panel-title-row > div .panel-title { margin-bottom:4px; }
+.panel-title-row > div .panel-sub  { margin-bottom:0; }
+
+/* ── CARDS ─────────────────────────────────────────────────── */
+.card {
+  background:linear-gradient(145deg, rgba(22,19,42,.9) 0%, rgba(15,13,26,.95) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:16px; margin-bottom:16px;
+  backdrop-filter:blur(8px);
+  box-shadow:0 4px 24px rgba(0,0,0,.3), 0 0 0 1px rgba(212,175,55,.05) inset;
+  transition:border-color .2s, box-shadow .2s;
+}
+.card:hover { border-color:var(--gold-border); box-shadow:0 4px 32px rgba(0,0,0,.4), 0 0 20px rgba(212,175,55,.06); }
+
+.card-title {
+  font-size:10px; font-weight:700; color:var(--gold);
+  letter-spacing:.1em; text-transform:uppercase; margin-bottom:12px;
+  opacity:.8;
+}
+
+/* ── STATS ROW ─────────────────────────────────────────────── */
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+
+.sbox {
+  background:linear-gradient(145deg, rgba(22,19,42,.85) 0%, rgba(12,10,20,.9) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--radius); padding:14px 10px; text-align:center;
+  position:relative; overflow:hidden; transition:all .2s;
+}
+.sbox::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity:.35;
+}
+.sbox:hover { border-color:var(--gold-border); transform:translateY(-1px); }
+
+.sval { font-size:22px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.sval.accent { background:linear-gradient(90deg, var(--gold-light), var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.sval.amber  { color:var(--amber); }
+.sval.warn   { color:var(--red); }
+.slbl { font-size:10px; color:var(--muted); margin-top:5px; font-weight:500; letter-spacing:.04em; }
+
+/* ── BUTTONS ───────────────────────────────────────────────── */
+.btn {
+  padding:9px 16px; border-radius:var(--radius);
+  font-size:12px; font-weight:600; cursor:pointer;
+  border:1px solid; transition:all .18s;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  letter-spacing:.02em;
+}
+
+.btn-primary {
+  background:linear-gradient(135deg, #c9a227 0%, #D4AF37 50%, #e8c84a 100%);
+  border-color:var(--gold);
+  color:#080710;
+  font-weight:700;
+  box-shadow:0 2px 14px rgba(212,175,55,.25);
+  text-shadow:none;
+}
+.btn-primary:hover {
+  background:linear-gradient(135deg, #d4b030 0%, #F0D060 50%, #f5e070 100%);
+  box-shadow:0 4px 20px rgba(212,175,55,.4);
+  transform:translateY(-1px);
+}
+.btn-primary:active { transform:translateY(0); box-shadow:0 1px 8px rgba(212,175,55,.2); }
+
+.btn-secondary {
+  background:rgba(22,19,42,.7); border-color:var(--border); color:var(--text-2);
+  backdrop-filter:blur(4px);
+}
+.btn-secondary:hover { border-color:var(--gold-border); color:var(--gold); }
+
+.btn-danger  { background:transparent; border-color:rgba(248,113,113,.3); color:var(--red); }
+.btn-danger:hover  { background:var(--red-dim); border-color:rgba(248,113,113,.5); }
+
+.btn-green   { background:transparent; border-color:rgba(74,222,128,.3); color:var(--green); }
+.btn-green:hover   { background:var(--green-dim); border-color:rgba(74,222,128,.5); }
+
+.btn-purple  { background:transparent; border-color:rgba(157,78,221,.35); color:#c4b5fd; }
+.btn-purple:hover  { background:var(--purple-dim); }
+
+.btn-sm  { padding:6px 12px; font-size:11px; }
+.btn-full { width:100%; }
+.btn-row  { display:flex; gap:8px; flex-wrap:wrap; }
+
+/* ── INPUTS ────────────────────────────────────────────────── */
+.inp, .ta, .sel {
+  width:100%; padding:9px 12px;
+  background:rgba(8,7,16,.7);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  color:var(--text); font-size:12px; outline:none;
+  font-family:var(--mono);
+  transition:border-color .2s, box-shadow .2s;
+}
+.inp:focus, .ta:focus, .sel:focus {
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(212,175,55,.12);
+}
+.inp::placeholder, .ta::placeholder { color:var(--muted2); }
+.ta { resize:vertical; min-height:88px; line-height:1.5; font-family:var(--sans); }
+.ta.out { min-height:140px; color:var(--green); font-family:var(--mono); font-size:11px; }
+
+.field-label { font-size:11px; color:var(--gold); margin-bottom:7px; font-weight:600; letter-spacing:.04em; opacity:.8; }
+.field-group  { margin-bottom:12px; }
+.field-row    { display:grid; gap:10px; }
+.field-row.c2 { grid-template-columns:1fr 1fr; }
+.field-row.c3 { grid-template-columns:1fr 1fr 1fr; }
+
+/* ── PROGRESS BAR ──────────────────────────────────────────── */
+.hits-wrap {
+  background:linear-gradient(145deg, rgba(22,19,42,.85), rgba(12,10,20,.9));
+  border:1px solid var(--border); border-radius:10px;
+  padding:12px; margin-bottom:14px;
+}
+.hits-top { display:flex; justify-content:space-between; margin-bottom:8px; }
+.hits-lbl { font-size:11px; color:var(--muted); }
+.hits-val { font-size:11px; color:var(--gold); font-weight:700; }
+.bar-track { height:5px; background:rgba(255,255,255,.06); border-radius:5px; overflow:hidden; }
+.bar-fill  {
+  height:100%;
+  background:linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+  border-radius:5px; transition:width .4s;
+  box-shadow:0 0 8px rgba(212,175,55,.4);
+}
+
+/* ── DOT ───────────────────────────────────────────────────── */
+.dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.dot.on  { background:var(--green); box-shadow:0 0 6px var(--green); }
+.dot.off { background:var(--muted2); }
+
+/* ── QUICK ACCESS ──────────────────────────────────────────── */
+.qa-block     { margin-bottom:16px; }
+.qa-block:last-child { margin-bottom:0; }
+.qa-header    { margin-bottom:9px; }
+.qa-header .qa-title {
+  font-size:10px; font-weight:700; color:var(--gold);
+  letter-spacing:.1em; text-transform:uppercase; opacity:.8;
+}
+.qa-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+
+.qa-btn {
+  position:relative;
+  background:linear-gradient(145deg, rgba(22,19,42,.8) 0%, rgba(15,13,26,.9) 100%);
+  border:1px solid var(--border); border-radius:9px;
+  padding:11px 13px; display:flex; align-items:center; gap:8px;
+  cursor:pointer; transition:all .18s; user-select:none;
+  min-height:46px; touch-action:manipulation;
+}
+.qa-btn .qa-lbl { flex:1; text-align:left; }
+.qa-btn:hover {
+  background:linear-gradient(135deg, rgba(212,175,55,.1) 0%, rgba(157,78,221,.06) 100%);
+  border-color:var(--gold-border);
+  box-shadow:0 2px 14px rgba(212,175,55,.08);
+  transform:translateY(-1px);
+}
+.qa-btn:active { transform:scale(.98); }
+.qa-ico { display:none; }
+.qa-lbl { font-size:12.5px; font-weight:500; color:var(--text-2); }
+.qa-btn::after {
+  content:'';
+  width:5px; height:5px;
+  border-right:1.5px solid var(--gold);
+  border-top:1.5px solid var(--gold);
+  transform:rotate(45deg); flex-shrink:0; opacity:.5;
+}
+.qa-btn:hover .qa-lbl { color:var(--gold); }
+
+/* ── STATUS BAR ────────────────────────────────────────────── */
+.status-bar {
+  background:linear-gradient(145deg, rgba(22,19,42,.85), rgba(12,10,20,.9));
+  border:1px solid var(--border); border-radius:10px;
+  padding:11px 14px; margin-bottom:16px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.status-left { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px; }
+
+.btn-cut {
+  background:linear-gradient(135deg, rgba(248,113,113,.15), rgba(248,113,113,.08));
+  border:1px solid rgba(248,113,113,.35); color:var(--red);
+  padding:5px 14px; border-radius:6px;
+  font-family:var(--mono); font-size:10px; font-weight:700; cursor:pointer;
+  transition:all .15s;
+}
+.btn-cut:hover { background:rgba(248,113,113,.2); border-color:rgba(248,113,113,.5); }
+
+/* ── PROXY ─────────────────────────────────────────────────── */
+.proxy-item {
+  background:linear-gradient(145deg, rgba(14,11,26,.9), rgba(10,8,18,.95));
+  border:1px solid var(--border); border-radius:9px;
+  padding:10px 12px; margin-bottom:6px;
+  display:flex; align-items:center; gap:8px;
+  transition:border-color .15s;
+}
+.proxy-item:hover { border-color:var(--gold-border); }
+.proxy-info  { flex:1; font-family:var(--mono); font-size:11px; color:var(--text-2); word-break:break-all; }
+.proxy-badge { padding:2px 8px; border-radius:5px; font-size:9px; font-weight:700; }
+.proxy-badge.http   { background:rgba(212,175,55,.15); color:var(--gold); }
+.proxy-badge.socks5 { background:rgba(157,78,221,.15); color:#c4b5fd; }
+.proxy-badge.socks4 { background:rgba(251,191,36,.15); color:var(--amber); }
+.proxy-acts { display:flex; gap:4px; }
+
+.px-btn {
+  padding:4px 10px; border-radius:5px;
+  font-size:10px; font-weight:700; cursor:pointer;
+  border:1px solid; font-family:var(--mono); transition:all .12s;
+}
+.px-btn.check { background:rgba(212,175,55,.1); border-color:rgba(212,175,55,.3); color:var(--gold); }
+.px-btn.check:hover { background:rgba(212,175,55,.2); }
+.px-btn.conn  { background:rgba(74,222,128,.1); border-color:rgba(74,222,128,.3); color:var(--green); }
+.px-btn.conn.active { background:rgba(74,222,128,.22); }
+.px-btn.rm    { background:rgba(248,113,113,.1); border-color:rgba(248,113,113,.3); color:var(--red); }
+.latency { font-size:9px; font-family:var(--mono); }
+.latency.ok   { color:var(--green); }
+.latency.fail { color:var(--red); }
+
+.type-row { display:flex; gap:6px; margin-bottom:12px; }
+.tbtn {
+  flex:1; padding:8px;
+  background:rgba(14,11,26,.8);
+  border:1px solid var(--border); border-radius:7px;
+  color:var(--muted); font-family:var(--mono); font-size:11px; font-weight:700;
+  cursor:pointer; text-align:center; transition:all .15s;
+}
+.tbtn.active {
+  background:linear-gradient(135deg, rgba(212,175,55,.15), rgba(212,175,55,.08));
+  border-color:var(--gold-border); color:var(--gold);
+  box-shadow:0 0 10px rgba(212,175,55,.1);
+}
+.proxy-list { max-height:260px; overflow-y:auto; }
+
+/* ── FINGERPRINT ────────────────────────────────────────────── */
+.fp-row  { display:flex; gap:8px; margin-bottom:10px; }
+.fp-sel  {
+  flex:1; padding:9px;
+  background:rgba(8,7,16,.7); border:1px solid var(--border);
+  border-radius:8px; color:var(--text); font-size:12px; outline:none;
+  transition:border-color .2s;
+}
+.fp-sel:focus { border-color:var(--gold); }
+.fp-btns { display:flex; gap:8px; }
+
+.os-picker { display:flex; gap:7px; margin-bottom:12px; }
+.os-btn {
+  flex:1; padding:9px 6px;
+  background:rgba(14,11,26,.8); border:1px solid var(--border);
+  border-radius:9px; color:var(--muted);
+  font-size:10.5px; font-weight:600; cursor:pointer;
+  transition:all .18s;
+}
+.os-btn.active {
+  background:linear-gradient(135deg, rgba(212,175,55,.15), rgba(157,78,221,.08));
+  border-color:var(--gold-border); color:var(--gold);
+}
+.os-btn:hover { border-color:var(--border-hi); color:var(--text-2); }
+
+/* ── LOGIN ─────────────────────────────────────────────────── */
+.login-wrap {
+  min-height:calc(100vh - 56px);
+  display:flex; align-items:center; justify-content:center;
+  padding:24px 20px 40px;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(212,175,55,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 50% 100%, rgba(157,78,221,.06) 0%, transparent 60%);
+}
+.login-box { max-width:360px; width:100%; }
+
+.login-card {
+  background:linear-gradient(145deg, rgba(18,16,34,.95) 0%, rgba(12,10,22,.98) 100%);
+  border:1px solid var(--gold-border);
+  border-radius:18px; padding:30px 26px;
+  box-shadow:0 8px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(212,175,55,.08) inset;
+  backdrop-filter:blur(16px);
+}
+
+.login-logo { display:flex; justify-content:center; margin-bottom:20px; }
+.login-logo img {
+  width:60px; height:60px; border-radius:14px; object-fit:cover;
+  border:2px solid var(--gold-border);
+  box-shadow:0 0 24px rgba(212,175,55,.2);
+}
+
+.login-title {
+  font-size:21px; font-weight:700; text-align:center;
+  background:linear-gradient(90deg, var(--gold-light), var(--gold), var(--rose));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  letter-spacing:.04em; margin-bottom:4px;
+}
+.login-tag {
+  font-size:10px; text-align:center; color:var(--muted);
+  letter-spacing:.14em; text-transform:uppercase; margin-bottom:18px;
+}
+.login-sub { font-size:12px; color:var(--muted); margin-bottom:22px; line-height:1.6; text-align:center; }
+.login-sub b { color:var(--text-2); font-weight:500; }
+
+.btn-tg {
+  width:100%; padding:12px;
+  background:linear-gradient(135deg, #1a8fc1, #229ed9);
+  border:none; border-radius:var(--radius);
+  color:#fff; font-size:13px; font-weight:600;
+  cursor:pointer; margin-bottom:20px; transition:all .18s;
+  box-shadow:0 4px 14px rgba(34,158,217,.25);
+}
+.btn-tg:hover { opacity:.92; transform:translateY(-1px); box-shadow:0 6px 20px rgba(34,158,217,.35); }
+
+.otp-lbl   { font-size:11px; color:var(--gold); margin-bottom:8px; font-weight:600; letter-spacing:.04em; }
+.otp-row   { display:flex; flex-direction:column; gap:8px; }
+.otp-in {
+  width:100%; padding:13px;
+  background:rgba(8,7,16,.8); border:1px solid var(--border);
+  border-radius:var(--radius); color:var(--text);
+  font-size:22px; letter-spacing:8px; text-align:center;
+  outline:none; font-family:var(--mono); transition:all .2s;
+}
+.otp-in:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.15); }
+
+.btn-verify {
+  width:100%; padding:12px;
+  background:linear-gradient(135deg, #c9a227, #D4AF37, #e8c84a);
+  border:none; border-radius:var(--radius); color:#080710;
+  font-weight:700; cursor:pointer; font-size:13px;
+  box-shadow:0 4px 14px rgba(212,175,55,.3); transition:all .18s;
+}
+.btn-verify:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(212,175,55,.4); }
+
+/* ── BIN LOOKUP ─────────────────────────────────────────────── */
+.bulk-ta {
+  width:100%; height:80px; padding:9px;
+  background:rgba(8,7,16,.7); border:1px solid var(--border);
+  border-radius:8px; color:var(--text);
+  font-size:11px; resize:none; outline:none;
+  font-family:var(--mono); transition:border-color .2s;
+}
+.bulk-ta:focus { border-color:var(--gold); }
+.myip-result { font-size:11px; color:var(--text-2); text-align:center; min-height:16px; margin-bottom:6px; }
+
+.bin-result-stats { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.stat-pill {
+  background:linear-gradient(145deg, rgba(22,19,42,.85), rgba(14,11,26,.9));
+  border:1px solid var(--border); border-radius:8px;
+  padding:6px 13px; font-family:var(--mono); font-size:11px; color:var(--text-2);
+}
+.stat-pill span { color:var(--gold); font-weight:700; }
+
+.bin-info-card {
+  background:linear-gradient(145deg, rgba(22,19,42,.9), rgba(12,10,20,.95));
+  border:1px solid var(--gold-border); border-radius:14px; padding:18px; margin-top:14px;
+  box-shadow:0 4px 24px rgba(0,0,0,.3), 0 0 24px rgba(212,175,55,.05);
+}
+.bin-info-header {
+  display:flex; align-items:center; gap:14px; margin-bottom:16px;
+  padding-bottom:14px; border-bottom:1px solid var(--border);
+}
+.bin-brand-badge {
+  padding:6px 16px; border-radius:9px;
+  font-size:13px; font-weight:700; font-family:var(--mono);
+}
+.bin-brand-badge.visa     { background:rgba(212,175,55,.15); color:var(--gold); border:1px solid var(--gold-border); }
+.bin-brand-badge.mastercard { background:rgba(248,113,113,.15); color:var(--red); border:1px solid rgba(248,113,113,.25); }
+.bin-brand-badge.amex     { background:rgba(74,222,128,.12); color:var(--green); border:1px solid rgba(74,222,128,.25); }
+.bin-brand-badge.discover { background:rgba(251,191,36,.12); color:var(--amber); border:1px solid rgba(251,191,36,.25); }
+.bin-brand-badge.other    { background:var(--elevated); color:var(--muted); border:1px solid var(--border); }
+
+.bin-number {
+  font-family:var(--mono); font-size:19px; font-weight:700;
+  background:linear-gradient(90deg, var(--text), var(--gold-pale));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  letter-spacing:2px;
+}
+.bin-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.bin-info-row {
+  background:rgba(8,7,16,.6); border-radius:9px; padding:10px 13px;
+  border:1px solid var(--border); transition:border-color .15s;
+}
+.bin-info-row:hover { border-color:var(--gold-border); }
+.bin-info-key { font-size:9px; color:var(--muted); margin-bottom:4px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; }
+.bin-info-val { font-size:13px; font-weight:600; color:var(--text); }
+
+/* Bulk BIN table */
+.bulk-table-wrap { overflow-x:auto; margin-top:14px; }
+.bulk-table { width:100%; border-collapse:collapse; font-size:11px; }
+.bulk-table th {
+  text-align:left; padding:8px 11px;
+  font-size:9px; font-weight:700; color:var(--gold);
+  letter-spacing:.1em; text-transform:uppercase;
+  border-bottom:1px solid var(--border); opacity:.8;
+}
+.bulk-table td {
+  padding:9px 11px; border-bottom:1px solid rgba(212,175,55,.06);
+  font-family:var(--mono); vertical-align:middle;
+}
+.bulk-table tr:last-child td { border-bottom:none; }
+.bulk-table tr:hover td { background:rgba(212,175,55,.03); }
+.bulk-table td:first-child { font-weight:700; color:var(--gold); }
+.bulk-status { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+.bulk-status.ok  { background:var(--green); }
+.bulk-status.err { background:var(--red); }
+
+/* ── GATE HEALTH ─────────────────────────────────────────────── */
+.gate-table { width:100%; border-collapse:collapse; }
+.gate-table th {
+  text-align:left; font-size:9px; font-weight:700; color:var(--gold);
+  letter-spacing:.1em; text-transform:uppercase;
+  padding:7px 11px; border-bottom:1px solid var(--border); opacity:.8;
+}
+.gate-table td {
+  padding:9px 11px; border-bottom:1px solid rgba(212,175,55,.06);
+  font-size:12px; vertical-align:middle;
+}
+.gate-table tr:last-child td { border-bottom:none; }
+.gate-table tr:hover td { background:rgba(212,175,55,.03); }
+.hit-dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle; }
+.hit-dot.hot  { background:#22c55e; box-shadow:0 0 6px #22c55e; }
+.hit-dot.warm { background:#f59e0b; }
+.hit-dot.cold { background:#ef4444; }
+.gw-tag { padding:2px 9px; border-radius:5px; font-size:10px; font-weight:700; font-family:var(--mono); }
+.gw-tag.stripe    { background:rgba(99,91,255,.2); color:#c4b5fd; }
+.gw-tag.paypal    { background:rgba(251,191,36,.15); color:var(--amber); }
+.gw-tag.braintree { background:rgba(212,175,55,.15); color:var(--gold); }
+.gw-tag.other     { background:rgba(100,116,139,.15); color:var(--muted); }
+
+/* Gate Tester */
+.test-result {
+  background:linear-gradient(145deg, rgba(22,19,42,.85), rgba(12,10,20,.9));
+  border:1px solid var(--border); border-radius:11px;
+  padding:15px; margin-top:14px; display:none;
+}
+.test-result.show { display:block; }
+.test-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:9px 0; border-bottom:1px solid rgba(212,175,55,.07);
+}
+.test-row:last-child { border-bottom:none; }
+.test-key { font-size:11px; color:var(--muted); }
+.test-val { font-size:12px; font-weight:600; font-family:var(--mono); color:var(--text-2); }
+
+/* ── CARD FILTER ─────────────────────────────────────────────── */
+.filter-stats { display:flex; gap:8px; margin-bottom:14px; }
+.fstat {
+  flex:1; background:linear-gradient(145deg, rgba(22,19,42,.85), rgba(12,10,20,.9));
+  border:1px solid var(--border); border-radius:11px; padding:13px; text-align:center;
+  transition:border-color .15s;
+}
+.fstat:hover { border-color:var(--gold-border); }
+.fstat-val { font-size:21px; font-weight:700; }
+.fstat-lbl { font-size:10px; color:var(--muted); margin-top:3px; }
+.fstat.valid   .fstat-val { color:var(--green); }
+.fstat.invalid .fstat-val { color:var(--red); }
+.fstat.total   .fstat-val { background:linear-gradient(90deg,var(--gold-light),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+/* ── IP FRAUD ─────────────────────────────────────────────────── */
+.risk-gauge { margin:14px 0; }
+.risk-gauge-bar {
+  height:10px; border-radius:8px;
+  background:linear-gradient(90deg, #22c55e 0%, #f59e0b 50%, #ef4444 100%);
+  position:relative; box-shadow:0 0 12px rgba(0,0,0,.4);
+}
+.risk-gauge-thumb {
+  position:absolute; top:-5px; width:20px; height:20px;
+  border-radius:50%; background:var(--gold);
+  border:2px solid var(--bg); box-shadow:0 0 8px rgba(212,175,55,.5);
+  transform:translateX(-50%); transition:left .4s;
+}
+.risk-score-num { font-size:34px; font-weight:700; text-align:center; margin-bottom:4px; }
+.risk-label { font-size:12px; text-align:center; margin-bottom:14px; font-weight:600; }
+.risk-flags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.risk-flag {
+  display:flex; align-items:center; gap:5px;
+  padding:5px 13px; border-radius:7px;
+  font-size:11px; font-weight:700;
+}
+.risk-flag.bad  { background:rgba(248,113,113,.15); border:1px solid rgba(248,113,113,.3); color:var(--red); }
+.risk-flag.good { background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.25); color:var(--green); }
+
+/* ── TEMP MAIL ─────────────────────────────────────────────────── */
+.usage-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 13px;
+  background:rgba(8,7,16,.5); border:1px solid var(--border); border-radius:var(--radius);
+  margin-bottom:13px; font-size:11px;
+}
+.usage-lbl { color:var(--muted); }
+.usage-val { color:var(--gold); font-weight:600; font-family:var(--mono); }
+
+.tm-addr-box {
+  display:flex; gap:8px; align-items:center;
+  background:rgba(8,7,16,.6); padding:11px 13px;
+  border-radius:var(--radius); border:1px solid var(--gold-border);
+  box-shadow:0 0 12px rgba(212,175,55,.06) inset;
+}
+.tm-addr-text {
+  flex:1; font-family:var(--mono); font-size:11px;
+  color:var(--green); word-break:break-all; user-select:all;
+}
+
+/* ── EMPTY STATE ────────────────────────────────────────────────── */
+.empty-state { text-align:center; padding:44px 20px; color:var(--muted); }
+.empty-state .ico { font-size:38px; margin-bottom:12px; opacity:.6; }
+.empty-state p { font-size:12px; line-height:1.7; }
+
+/* ── TOAST ──────────────────────────────────────────────────────── */
+.toast {
+  position:fixed; bottom:16px; right:16px;
+  min-width:200px; max-width:320px;
+  background:linear-gradient(145deg, rgba(22,19,42,.95), rgba(14,11,26,.98));
+  border:1px solid var(--border); border-radius:10px;
+  padding:11px 15px; font-size:12px; color:var(--text-2);
+  opacity:0; transition:opacity .2s, transform .2s; z-index:9999;
+  backdrop-filter:blur(12px);
+  transform:translateY(4px);
+}
+.toast.show { opacity:1; transform:translateY(0); }
+.toast.ok  { border-color:rgba(74,222,128,.4); color:var(--green); }
+.toast.err { border-color:rgba(248,113,113,.4); color:var(--red); }
+
+/* ── SCROLLBARS ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(212,175,55,.2); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:rgba(212,175,55,.4); }
+
+/* ── DESKTOP ────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  body { display:flex; height:100dvh; overflow:hidden; }
+  .sidebar { position:relative; left:0 !important; width:var(--sidebar); flex-shrink:0; box-shadow:4px 0 24px rgba(0,0,0,.4); height:100dvh; }
+  .sb-close-btn { display:none; }
+  .sb-overlay { display:none !important; }
+  .top-bar { display:none !important; }
+  .app-wrap { flex:1; min-height:0; }
+  .panel { padding:26px 32px var(--scroll-pad); }
+  .login-wrap { min-height:100dvh; }
+  .qa-grid { grid-template-columns:1fr 1fr; }
+}
+
+/* ── MOBILE ─────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  body { display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
+  .sidebar { left:-280px; height:100dvh; }
+  .sidebar.open { left:0; }
+  .top-bar { display:flex !important; flex-shrink:0; }
+  .app-wrap { flex:1; min-height:0; height:auto; }
+  .content { flex:1; min-height:0; overflow:hidden; }
+  .panel { padding:14px 16px var(--scroll-pad); }
+  .field-row.c2, .field-row.c3 { grid-template-columns:1fr; }
+  .stats-row { grid-template-columns:1fr 1fr; }
+  .fp-btns { flex-direction:column; }
+  .fp-btns .btn { flex:none; }
+  .panel-title-row { flex-direction:column; gap:8px; align-items:flex-start; }
+  .panel-title { font-size:17px; }
+  .login-title { font-size:19px; }
+  .login-card { padding:24px 18px; }
+  .login-wrap { min-height:calc(100dvh - var(--topbar-h)); padding-bottom:var(--scroll-pad); }
+  .toast { right:10px; left:10px; min-width:unset; max-width:unset; bottom:max(16px, env(safe-area-inset-bottom, 0px) + 8px); }
+  .gate-table th:nth-child(4), .gate-table td:nth-child(4) { display:none; }
+  .proxy-list { max-height:min(240px, 35dvh); }
+  .bin-info-grid { grid-template-columns:1fr; }
+  .risk-flags { gap:6px; }
+  .btn-logout-icon { display:flex !important; }
+  .qa-grid { grid-template-columns:1fr; }
+}
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns:1fr; }
+}
+</style>
 </head>
 <body>
 
-  <!-- Header (always visible) -->
-  <div class="header">
-    <div class="header-logo">🔐</div>
+<div class="sb-overlay" id="sbOverlay"></div>
+
+<!-- SIDEBAR DRAWER -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-header">
+    <div class="sb-logo"><img src="logo.jpg" alt="Daemon"></div>
     <div>
-      <div class="header-title">DaemonERA</div>
-      <div class="header-sub">Telegram Authentication</div>
+      <div class="sb-brand">Daemon</div>
+      <div class="sb-ver">v1.3.27</div>
     </div>
+    <button class="sb-close-btn" id="sbClose">✕</button>
   </div>
 
-  <!-- PAGE 1: Enter username / ID -->
-  <div class="page active" id="page-identify">
-    <div class="section">
-      <div class="steps">
-        <div class="step active" id="s1">
-          <div class="step-dot">1</div>
-          <span>Identify</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" id="s2">
-          <div class="step-dot">2</div>
-          <span>Verify OTP</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" id="s3">
-          <div class="step-dot">3</div>
-          <span>Done</span>
-        </div>
-      </div>
-
-      <div>
-        <label for="identifier">Telegram Username or ID</label>
-        <input
-          id="identifier"
-          type="text"
-          placeholder="@username  or  123456789"
-          autocomplete="off"
-          spellcheck="false"
-        />
-      </div>
-
-      <div id="alert-identify" class="alert"></div>
-
-      <button class="btn btn-primary" id="btn-send-otp">
-        Send OTP to Telegram
-      </button>
-
-      <div class="note">
-        ℹ️ You must send <code>/start</code> to
-        <code>@Daemon_T_bot</code> in Telegram at least once before logging in.
-        Your OTP will be sent there.
+  <div class="sb-user" id="sbUserSection" style="display:none">
+    <div class="sb-ucard">
+      <div class="sb-avatar">👤</div>
+      <div class="sb-user-info">
+        <div class="sb-uname" id="sbUsername">@username</div>
+        <div id="sbPlanBadge" class="plan-badge free">FREE</div>
       </div>
     </div>
   </div>
 
-  <!-- PAGE 2: Enter OTP -->
-  <div class="page" id="page-otp">
-    <div class="section">
-      <div class="steps">
-        <div class="step done">
-          <div class="step-dot">✓</div>
-          <span>Identify</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step active">
-          <div class="step-dot">2</div>
-          <span>Verify OTP</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step">
-          <div class="step-dot">3</div>
-          <span>Done</span>
-        </div>
-      </div>
+  <nav class="sb-nav" id="sbNav">
+    <div class="nav-item active" data-panel="account">⬡ Dashboard</div>
 
-      <div id="otp-sent-note" class="alert alert-info show">
-        ✅ OTP sent! Check <strong>@Daemon_T_bot</strong> in Telegram and enter the 6-digit code below.
-      </div>
+    <div class="nav-section">Card Tools</div>
+    <div class="nav-item" data-panel="bingen">BIN Generator</div>
+    <div class="nav-item" data-panel="binlookup">BIN Lookup</div>
+    <div class="nav-item" data-panel="bulkbin">Bulk BIN</div>
+    <div class="nav-item" data-panel="cardfilter">Card Filter</div>
 
-      <div>
-        <label for="otp">6-Digit OTP</label>
-        <input
-          id="otp"
-          class="otp-input"
-          type="text"
-          inputmode="numeric"
-          maxlength="6"
-          placeholder="000000"
-          autocomplete="one-time-code"
-        />
-      </div>
+    <div class="nav-section">Gate Tools</div>
+    <div class="nav-item" data-panel="gatehealth">Gate Health</div>
+    <div class="nav-item" data-panel="gatetester">Gate Tester</div>
 
-      <div id="alert-otp" class="alert"></div>
+    <div class="nav-section">Network</div>
+    <div class="nav-item" data-panel="proxy">Proxy Manager</div>
+    <div class="nav-item" data-panel="spoof">Fingerprint</div>
 
-      <button class="btn btn-primary" id="btn-verify-otp">
-        Verify OTP
-      </button>
-      <button class="btn btn-ghost" id="btn-back">
-        ← Back
-      </button>
-    </div>
+    <div class="nav-section">Utilities</div>
+    <div class="nav-item" data-panel="ipfraud">IP Fraud Check</div>
+    <div class="nav-item" data-panel="tempmail">Temp Mail</div>
+  </nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="app-wrap">
+  <div class="top-bar" id="topBar">
+    <button class="hamburger-btn" id="btnMenu">
+      <span></span><span></span><span></span>
+    </button>
+    <img src="logo.jpg" class="tb-logo-img" alt="Daemon">
+    <span class="tb-brand-title">Daemon</span>
   </div>
+  <main class="content">
 
-  <!-- PAGE 3: Logged in -->
-  <div class="page" id="page-loggedin">
-    <div class="section">
-      <div class="user-card">
-        <div id="user-avatar" class="avatar">👤</div>
+  <!-- ACCOUNT / DASHBOARD -->
+  <div class="panel active" id="panel-account">
+    <div id="viewLogin" style="display:none">
+      <div class="login-wrap">
+        <div class="login-box">
+          <div class="login-card">
+
+            <!-- Step 1: identify -->
+            <div id="loginStep1">
+              <div class="login-logo"><img src="../icons/icon128.png" alt="Daemon"></div>
+              <div class="login-title">DaemonERA</div>
+              <div class="login-tag">Telegram Authentication</div>
+              <div class="login-sub">Enter your <b>Telegram username or ID</b><br>to receive a one-time login code.</div>
+              <div class="otp-lbl" style="margin-bottom:8px">Telegram Username or ID</div>
+              <div class="otp-row">
+                <input class="inp" id="tgIdentifier" type="text"
+                  placeholder="@username  or  123456789"
+                  style="font-size:13px;letter-spacing:0;text-align:left;margin-bottom:10px"
+                  spellcheck="false" autocomplete="off">
+                <button class="btn-tg" id="btnSendOtp">📨 Send OTP to Telegram</button>
+              </div>
+              <div id="loginError1" style="display:none;margin-top:12px;padding:10px;
+                background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);
+                border-radius:8px;font-size:12px;color:#f87171;line-height:1.5"></div>
+              <div class="login-sub" style="margin-top:16px;font-size:11px;line-height:1.7">
+                ℹ️ Send <b>/start</b> to <b>@Daemon_T_bot</b> in Telegram first,<br>
+                then log in here with your username or numeric ID.
+              </div>
+            </div>
+
+            <!-- Step 2: OTP -->
+            <div id="loginStep2" style="display:none">
+              <div class="login-logo"><img src="../icons/icon128.png" alt="Daemon"></div>
+              <div class="login-title">Enter OTP</div>
+              <div class="login-sub">Check <b>@Daemon_T_bot</b> in Telegram<br>and enter the 6-digit code below.</div>
+              <div class="otp-lbl">6-Digit OTP</div>
+              <div class="otp-row">
+                <input class="otp-in" id="tgOtp" type="text" inputmode="numeric"
+                  maxlength="6" placeholder="000000" autocomplete="one-time-code">
+                <button class="btn-verify" id="btnVerifyOtp">Verify →</button>
+              </div>
+              <div id="loginError2" style="display:none;margin-top:12px;padding:10px;
+                background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);
+                border-radius:8px;font-size:12px;color:#f87171"></div>
+              <button id="btnLoginBack"
+                style="margin-top:16px;background:transparent;border:none;
+                       color:var(--muted);font-size:12px;cursor:pointer;width:100%">
+                ← Back
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="viewMain" style="display:none">
+      <div class="panel-title-row">
         <div>
-          <div class="user-name" id="user-name">—</div>
-          <div class="user-meta" id="user-meta">—</div>
+          <div class="panel-title">Dashboard</div>
+          <div class="panel-sub">Account summary, hits, and quick access to tools</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btnRefresh">↺ Refresh</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="sbox">
+          <div class="sval" id="statSuccess">0</div>
+          <div class="slbl">Total Hits</div>
+        </div>
+        <div class="sbox">
+          <div class="sval accent" id="statHits">∞</div>
+          <div class="slbl">Daily Hits</div>
+        </div>
+        <div class="sbox">
+          <div class="sval amber" id="statSpoof">∞</div>
+          <div class="slbl">Spoof Uses</div>
         </div>
       </div>
 
-      <button class="btn btn-success" id="btn-dashboard">
-        🖥 Open Dashboard
-      </button>
-      <button class="btn btn-ghost" id="btn-logout">
-        Log out
-      </button>
+      <div class="card" style="padding:16px 14px 18px">
+        <div class="qa-block">
+          <div class="qa-header"><span class="qa-title">Card Tools</span></div>
+          <div class="qa-grid">
+            <div class="qa-btn" data-panel="bingen"><span class="qa-lbl">BIN Generator</span></div>
+            <div class="qa-btn" data-panel="binlookup"><span class="qa-lbl">BIN Lookup</span></div>
+            <div class="qa-btn" data-panel="bulkbin"><span class="qa-lbl">Bulk BIN</span></div>
+            <div class="qa-btn" data-panel="cardfilter"><span class="qa-lbl">Card Filter</span></div>
+          </div>
+        </div>
+        <div class="qa-block">
+          <div class="qa-header"><span class="qa-title">Gate Tools</span></div>
+          <div class="qa-grid">
+            <div class="qa-btn" data-panel="gatehealth"><span class="qa-lbl">Gate Health</span></div>
+            <div class="qa-btn" data-panel="gatetester"><span class="qa-lbl">Gate Tester</span></div>
+          </div>
+        </div>
+        <div class="qa-block">
+          <div class="qa-header"><span class="qa-title">Network</span></div>
+          <div class="qa-grid">
+            <div class="qa-btn" data-panel="proxy"><span class="qa-lbl">Proxy Manager</span></div>
+            <div class="qa-btn" data-panel="spoof"><span class="qa-lbl">Fingerprint</span></div>
+          </div>
+        </div>
+        <div class="qa-block">
+          <div class="qa-header"><span class="qa-title">Utilities</span></div>
+          <div class="qa-grid">
+            <div class="qa-btn" data-panel="ipfraud"><span class="qa-lbl">IP Fraud Check</span></div>
+            <div class="qa-btn" data-panel="tempmail"><span class="qa-lbl">Temp Mail</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="popup.js"></script>
+  <!-- PROXY -->
+  <div class="panel panel-scroll-end" id="panel-proxy">
+    <div class="panel-title">Proxy Manager</div>
+    <div class="panel-sub">Manage and rotate your proxies</div>
+    <div class="status-bar">
+      <div class="status-left">
+        <div class="dot off" id="proxyDot"></div>
+        <span id="proxyStatus" style="font-family:var(--mono);font-size:11px;color:var(--muted)">No proxy</span>
+      </div>
+      <button class="btn-cut" id="btnCut">Disconnect</button>
+    </div>
+    <div class="type-row">
+      <button class="tbtn active" data-type="http">HTTP</button>
+      <button class="tbtn" data-type="socks5">SOCKS5</button>
+      <button class="tbtn" data-type="socks4">SOCKS4</button>
+    </div>
+    <div class="field-row c2" style="margin-bottom:8px">
+      <input class="inp" id="inpHost" placeholder="Host / IP">
+      <input class="inp" id="inpPort" placeholder="Port" type="number">
+    </div>
+    <div class="field-row c2" style="margin-bottom:8px">
+      <input class="inp" id="inpUser" placeholder="Username (optional)">
+      <input class="inp" id="inpPass" placeholder="Password (optional)">
+    </div>
+    <button class="btn btn-primary btn-full" id="btnAdd" style="margin-bottom:16px">+ Add Proxy</button>
+    <div class="card-title">Bulk Import</div>
+    <textarea class="bulk-ta" id="bulkTa" placeholder="host:port&#10;host:port:user:pass&#10;socks5://host:port"></textarea>
+    <button class="btn btn-secondary btn-full" id="btnImport" style="margin:8px 0 16px">Import List</button>
+    <div class="card-title">Saved Proxies</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button class="btn btn-secondary btn-sm" id="btnMyIP" style="flex:1">My IP</button>
+      <button class="btn btn-secondary btn-sm" id="btnCheckAll" style="flex:1">Check All</button>
+      <button class="btn btn-danger btn-sm" id="btnClearAll" style="flex:1">Clear</button>
+    </div>
+    <div class="myip-result" id="myIPResult"></div>
+    <div class="proxy-list" id="proxyList"></div>
+  </div>
+
+  <!-- SPOOF / FINGERPRINT -->
+  <div class="panel" id="panel-spoof">
+    <div class="panel-title">Fingerprint Spoof</div>
+    <div class="panel-sub">Language and timezone per country. Layout preserved on mobile &amp; desktop. Unlimited.</div>
+    <div class="status-bar">
+      <div class="status-left">
+        <span id="fpInfo" style="font-family:var(--mono);font-size:11px;color:#c4b5fd">No spoofing active</span>
+      </div>
+      <button class="btn-cut" id="btnFpCut">Clear</button>
+    </div>
+    <div class="card">
+      <div class="field-label">Country / Region</div>
+      <div class="fp-row" style="margin-bottom:12px">
+        <select class="fp-sel" id="countrySelect" style="flex:1"></select>
+        <button class="btn btn-secondary btn-sm" id="btnDetect" title="Detect from your IP">Detect</button>
+      </div>
+      <div class="field-label">Device Profile</div>
+      <div class="os-picker">
+        <button class="os-btn active" data-os="windows">🖥️ Desktop</button>
+        <button class="os-btn" data-os="android">🤖 Android</button>
+      </div>
+      <div id="spoofUsageRow" class="usage-row">
+        <span class="usage-lbl">Today's usage</span>
+        <span id="spoofUsageText" class="usage-val">0 / 5</span>
+      </div>
+      <div class="fp-btns">
+        <button class="btn btn-primary" id="btnApplyFp" style="flex:1">Apply</button>
+        <button class="btn btn-secondary" id="btnRandFp" style="flex:1">Random</button>
+        <button class="btn btn-danger" id="btnClearFp" style="flex:1">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BIN LOOKUP -->
+  <div class="panel" id="panel-binlookup">
+    <div class="panel-title">BIN Lookup</div>
+    <div class="panel-sub">Card brand · bank · country — multi-source (antipublic + handyapi + binlist)</div>
+    <div class="card">
+      <div class="field-label">BIN (6-10 digits — full input is tried first, then truncated to 6 if no match)</div>
+      <div style="display:flex;gap:8px">
+        <input class="inp" id="binLookupInput" placeholder="e.g. 424242 or 4242421" maxlength="15" style="flex:1" inputmode="numeric">
+        <button class="btn btn-primary" id="btnBinLookup">Lookup</button>
+      </div>
+    </div>
+    <div id="binLookupResult" style="display:none">
+      <div class="bin-info-card">
+        <div class="bin-info-header">
+          <span class="bin-brand-badge other" id="blBrand">VISA</span>
+          <span class="bin-number" id="blBinNum">424242</span>
+        </div>
+        <div class="bin-info-grid">
+          <div class="bin-info-row"><div class="bin-info-key">Bank</div><div class="bin-info-val" id="blBank">—</div></div>
+          <div class="bin-info-row"><div class="bin-info-key">Country</div><div class="bin-info-val" id="blCountry">—</div></div>
+          <div class="bin-info-row"><div class="bin-info-key">Type</div><div class="bin-info-val" id="blType">—</div></div>
+          <div class="bin-info-row"><div class="bin-info-key">Level</div><div class="bin-info-val" id="blLevel">—</div></div>
+          <div class="bin-info-row"><div class="bin-info-key">Source</div><div class="bin-info-val" id="blPrepaid" style="font-size:11px;color:var(--muted)">—</div></div>
+          <div class="bin-info-row"><div class="bin-info-key">Bank Phone</div><div class="bin-info-val" id="blPhone" style="font-size:11px">—</div></div>
+        </div>
+        <div class="btn-row" style="margin-top:13px">
+          <button class="btn btn-green btn-sm" id="btnCopyBinLookup">Copy All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IP FRAUD SCORE -->
+  <div class="panel" id="panel-ipfraud">
+    <div class="panel-title">IP Fraud Score</div>
+    <div class="panel-sub">VPN · Proxy · TOR · Datacenter · Abuse score — multi-source (ip-api + proxycheck.io)</div>
+    <div class="card">
+      <div class="field-label">IP Address</div>
+      <div style="display:flex;gap:8px">
+        <input class="inp" id="ipFraudInput" placeholder="e.g. 8.8.8.8" style="flex:1">
+        <button class="btn btn-secondary btn-sm" id="btnDetectIP">My IP</button>
+        <button class="btn btn-primary" id="btnCheckIP">Check</button>
+      </div>
+    </div>
+    <div id="ipFraudResult" style="display:none">
+      <div class="card">
+        <div class="risk-score-num" id="ipRiskScore">0</div>
+        <div class="risk-label" id="ipRiskLabel">Calculating...</div>
+        <div class="risk-gauge">
+          <div class="risk-gauge-bar">
+            <div class="risk-gauge-thumb" id="ipGaugeThumb" style="left:0%"></div>
+          </div>
+        </div>
+        <div class="risk-flags" id="ipRiskFlags"></div>
+        <div class="bin-info-grid">
+          <div class="bin-info-row"><div class="bin-info-key">IP</div><div class="bin-info-val" id="ipAddr">—</div></div>
+          <div class="bin-info-row"><div class="bin-info-key">Country</div><div class="bin-info-val" id="ipCountry">—</div></div>
+          <div class="bin-info-row"><div class="bin-info-key">ISP</div><div class="bin-info-val" id="ipISP" style="font-size:11px">—</div></div>
+          <div class="bin-info-row"><div class="bin-info-key">Org</div><div class="bin-info-val" id="ipOrg" style="font-size:11px">—</div></div>
+        </div>
+        <div class="btn-row" style="margin-top:13px">
+          <button class="btn btn-green btn-sm" id="btnCopyIPFraud">Copy Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BIN GENERATOR -->
+  <div class="panel" id="panel-bingen">
+    <div class="panel-title-row">
+      <div><div class="panel-title">BIN Generator</div><div class="panel-sub">Generate valid cards from a BIN prefix.</div></div>
+    </div>
+    <div class="card">
+      <div class="field-row c2" style="margin-bottom:12px">
+        <div>
+          <div class="field-label">BIN Prefix (6-10 digits)</div>
+          <input class="inp" id="binPrefix" placeholder="e.g. 374355" maxlength="15">
+        </div>
+        <div>
+          <div class="field-label">Card Count</div>
+          <input class="inp" type="number" id="binQty" value="50" min="1" max="500">
+        </div>
+      </div>
+      <div class="field-row c3" style="margin-bottom:14px">
+        <div>
+          <div class="field-label">Expiry Month</div>
+          <select class="sel" id="binExpM"><option value="rand">Random</option></select>
+        </div>
+        <div>
+          <div class="field-label">Expiry Year</div>
+          <select class="sel" id="binExpY"><option value="rand">Random</option></select>
+        </div>
+        <div>
+          <div class="field-label">CVV</div>
+          <select class="sel" id="binCvvType">
+            <option value="auto">Auto (BIN based)</option>
+            <option value="rand3">Random 3 digits</option>
+            <option value="rand4">Random 4 digits (AMEX)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" id="btnGenerate">Generate Cards</button>
+    </div>
+    <div id="binResultArea" style="display:none">
+      <div class="bin-result-stats">
+        <div class="stat-pill">Generated: <span id="binGenCount">0</span></div>
+        <div class="stat-pill">BIN: <span id="binGenBin">-</span></div>
+        <div class="stat-pill">Type: <span id="binGenType">-</span></div>
+        <div class="stat-pill">Length: <span id="binGenLen">-</span></div>
+      </div>
+      <div class="field-label">Output (num|mm/yy|cvv)</div>
+      <textarea class="ta out" id="binOutput" readonly style="min-height:200px;font-size:11px;"></textarea>
+      <div class="btn-row" style="margin-top:9px">
+        <button class="btn btn-green btn-sm" id="btnCopyBin">Copy All</button>
+        <button class="btn btn-secondary btn-sm" id="btnDlBin">Download</button>
+        <button class="btn btn-danger btn-sm" id="btnClearBin">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BULK BIN LOOKUP -->
+  <div class="panel" id="panel-bulkbin">
+    <div class="panel-title-row">
+      <div><div class="panel-title">Bulk BIN Lookup</div><div class="panel-sub">Look up multiple BINs at once.</div></div>
+    </div>
+    <div class="card">
+      <div class="field-label">Paste BINs (one per line, max 50)</div>
+      <textarea class="ta" id="bulkBinInput" placeholder="424242&#10;510510&#10;374251&#10;601100" style="min-height:120px"></textarea>
+      <div class="btn-row" style="margin-top:9px">
+        <button class="btn btn-primary" id="btnBulkLookup">Lookup All</button>
+        <button class="btn btn-secondary btn-sm" id="btnClearBulkBin">Clear</button>
+      </div>
+    </div>
+    <div id="bulkBinResult" style="display:none">
+      <div class="stat-pill" style="margin-bottom:10px;display:inline-block">Results: <span id="bulkBinCount">0</span> BINs</div>
+      <div class="bulk-table-wrap">
+        <table class="bulk-table">
+          <thead><tr><th>BIN</th><th>Brand</th><th>Bank</th><th>Country</th><th>Type</th><th>Level</th></tr></thead>
+          <tbody id="bulkBinTbody"></tbody>
+        </table>
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-green btn-sm" id="btnCopyBulkBin">Copy Table</button>
+        <button class="btn btn-secondary btn-sm" id="btnDlBulkBin">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GATE HEALTH -->
+  <div class="panel" id="panel-gatehealth">
+    <div class="panel-title-row">
+      <div><div class="panel-title">Gate Health</div><div class="panel-sub">Community hit activity by site.</div></div>
+      <button class="btn btn-secondary btn-sm" id="btnRefreshGate">Refresh</button>
+    </div>
+    <div class="card" style="padding:13px">
+      <div style="display:flex;gap:16px;margin-bottom:13px;font-size:11px;color:var(--muted);flex-wrap:wrap">
+        <span><span class="hit-dot hot"></span>Hot (&lt;1h)</span>
+        <span><span class="hit-dot warm"></span>Warm (1-24h)</span>
+        <span><span class="hit-dot cold"></span>Cold (&gt;24h)</span>
+      </div>
+      <div id="gateTableWrap">
+        <div class="empty-state"><p>No gate data yet.<br>Successful hits will appear here.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GATE TESTER -->
+  <div class="panel" id="panel-gatetester">
+    <div class="panel-title">Gate Tester</div>
+    <div class="panel-sub">Check payment gateway and community hit history.</div>
+    <div class="card">
+      <div class="field-label">URL or Target Domain</div>
+      <div style="display:flex;gap:8px">
+        <input class="inp" id="gateTestUrl" placeholder="https://pay.site.com or domain.com" style="flex:1">
+        <button class="btn btn-primary" id="btnTestGate">Test</button>
+      </div>
+    </div>
+    <div class="test-result" id="testResult">
+      <div class="test-row"><span class="test-key">Domain</span><span class="test-val" id="trDomain">-</span></div>
+      <div class="test-row"><span class="test-key">Gateway Detected</span><span class="test-val" id="trGateway">-</span></div>
+      <div class="test-row"><span class="test-key">Community Hits</span><span class="test-val" id="trHits">-</span></div>
+      <div class="test-row"><span class="test-key">Last Hit</span><span class="test-val" id="trLastHit">-</span></div>
+      <div class="test-row"><span class="test-key">Last Amount</span><span class="test-val" id="trAmount">-</span></div>
+      <div class="test-row"><span class="test-key">Status</span><span class="test-val" id="trStatus">-</span></div>
+    </div>
+  </div>
+
+  <!-- TEMP MAIL -->
+  <div class="panel panel-scroll-end" id="panel-tempmail">
+    <div class="panel-title">Temp Mail</div>
+    <div class="panel-sub">Disposable inbox for verification codes. Unlimited.</div>
+    <div class="card">
+      <div id="tmUsageRow" class="usage-row">
+        <span class="usage-lbl">Today's usage</span>
+        <span id="tmUsageText" class="usage-val">0 / 5</span>
+      </div>
+      <div class="field-label">Email address</div>
+      <div class="tm-addr-box">
+        <span id="tmAddress" class="tm-addr-text">Click Generate to start</span>
+        <button class="btn btn-green btn-sm" id="btnTmCopy" disabled style="flex-shrink:0">Copy</button>
+      </div>
+      <div class="btn-row" style="margin-top:11px">
+        <button class="btn btn-primary" id="btnTmNew" style="flex:1">Generate</button>
+        <button class="btn btn-secondary" id="btnTmRefresh" disabled style="flex:1">Refresh Inbox</button>
+      </div>
+      <div id="tmAutoRow" style="display:none;align-items:center;justify-content:space-between;margin-top:9px;font-size:11px;color:var(--muted)">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="tmAutoChk" checked> Auto-refresh every 10s
+        </label>
+        <span id="tmStatus" style="font-family:var(--mono);font-size:10px;color:var(--muted2)">idle</span>
+      </div>
+    </div>
+
+    <div id="tmInboxArea" style="display:none">
+      <div class="field-label" style="margin-top:16px">Inbox <span id="tmInboxCount" style="color:var(--gold)">(0)</span></div>
+      <div id="tmInboxList" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
+    <div id="tmMsgArea" style="display:none;margin-top:16px;padding-bottom:24px">
+      <button class="btn btn-secondary btn-sm" id="btnTmBack" style="margin-bottom:12px">← Back to Inbox</button>
+      <div class="card" style="padding:15px">
+        <div style="font-weight:700;font-size:13px;color:var(--text);word-break:break-word" id="tmMsgSubject">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;word-break:break-all" id="tmMsgFrom">—</div>
+        <div id="tmMsgCodeBox" style="display:none;margin:13px 0;padding:15px;background:linear-gradient(135deg,rgba(212,175,55,.1),rgba(240,208,96,.06));border:1px solid var(--gold-border);border-radius:11px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:1.5px">DETECTED CODE</div>
+          <div id="tmMsgCode" style="font-family:var(--mono);font-size:26px;font-weight:700;color:var(--gold);letter-spacing:5px;text-shadow:0 0 16px rgba(212,175,55,.4)">—</div>
+          <button class="btn btn-primary btn-sm" id="btnTmCopyCode" style="margin-top:9px">📋 Copy Code</button>
+        </div>
+        <div id="tmMsgLinkBox" style="display:none;margin:13px 0;padding:15px;background:linear-gradient(135deg,rgba(157,78,221,.1),rgba(157,78,221,.06));border:1px solid rgba(157,78,221,.3);border-radius:11px">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:1.5px;text-align:center">DETECTED LINK</div>
+          <div id="tmMsgLinkLbl" style="font-size:12px;color:#e9d5ff;font-weight:600;text-align:center;margin-bottom:8px">Sign-in link</div>
+          <div id="tmMsgLinkUrl" style="font-family:var(--mono);font-size:10.5px;color:#c4b5fd;background:rgba(8,7,16,.6);padding:9px 11px;border-radius:7px;word-break:break-all;line-height:1.5;max-height:80px;overflow-y:auto;border:1px solid rgba(157,78,221,.18)">—</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-purple btn-sm" id="btnTmOpenLink" style="flex:1">🔗 Open Link</button>
+            <button class="btn btn-secondary btn-sm" id="btnTmCopyLink">📋 Copy</button>
+          </div>
+        </div>
+        <div id="tmMsgBody" style="margin-top:11px;padding:11px;background:rgba(8,7,16,.5);border-radius:9px;font-size:12px;color:var(--text-2);white-space:pre-wrap;word-break:break-word;line-height:1.6"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD FILTER -->
+  <div class="panel panel-scroll-end" id="panel-cardfilter">
+    <div class="panel-title">Card Filter</div>
+    <div class="panel-sub">Filter invalid cards (Luhn check + expiry)</div>
+    <div class="card">
+      <div class="field-label">Paste cards (num|mm/yy|cvv or num|mmyy|cvv)</div>
+      <textarea class="ta" id="filterInput" placeholder="4111111111111111|12/27|123&#10;5500005555555559|09/26|456" style="min-height:120px"></textarea>
+      <div class="btn-row" style="margin-top:9px">
+        <button class="btn btn-primary" id="btnFilter">Filter</button>
+        <button class="btn btn-secondary btn-sm" id="btnClearFilter">Clear</button>
+      </div>
+    </div>
+    <div id="filterResultArea" style="display:none">
+      <div class="filter-stats">
+        <div class="fstat total"><div class="fstat-val" id="fTotal">0</div><div class="fstat-lbl">Total</div></div>
+        <div class="fstat valid"><div class="fstat-val" id="fValid">0</div><div class="fstat-lbl">Valid</div></div>
+        <div class="fstat invalid"><div class="fstat-val" id="fInvalid">0</div><div class="fstat-lbl">Invalid</div></div>
+      </div>
+      <div class="field-label">Valid Cards</div>
+      <textarea class="ta out" id="filterOutput" readonly style="min-height:160px"></textarea>
+      <div class="btn-row" style="margin-top:9px">
+        <button class="btn btn-green btn-sm" id="btnCopyFilter">Copy Valid</button>
+        <button class="btn btn-secondary btn-sm" id="btnDlFilter">Download</button>
+      </div>
+    </div>
+  </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="popup.js"></script>
 </body>
 </html>
