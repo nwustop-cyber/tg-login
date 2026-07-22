@@ -4,7 +4,7 @@ compatibility_date = "2025-01-01"
 
 # Replace ALLOWED_ORIGIN with your Pages URL (or custom domain).
 [vars]
-ALLOWED_ORIGIN = "https://tg-login.pages.dev"
+ALLOWED_ORIGIN = "https://tg-login-30e.pages.dev"
 
 # Fill database_id after: wrangler d1 create tg_login_db
 [[d1_databases]]
