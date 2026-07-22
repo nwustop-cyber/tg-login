@@ -2,13 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard</title>
+  <title>DaemonERA Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .hits-card { background:#14181d; border:1px solid #232830; border-radius:12px; padding:24px; margin:16px auto; max-width:1000px; }
+    .stat-boxes { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+    .stat-box { background:#0d1117; border:1px solid #30363d; border-radius:10px; padding:16px 24px; min-width:120px; text-align:center; }
+    .stat-box .num { font-size:28px; font-weight:700; color:#2b7cff; }
+    .stat-box .lbl { font-size:11px; color:#8a94a3; text-transform:uppercase; margin-top:4px; }
+    .stat-box.green .num { color:#3fb950; }
+    .stat-box.gold .num { color:#d2a8ff; }
+    .tab-bar { display:flex; gap:4px; margin-bottom:16px; border-bottom:1px solid #232830; }
+    .tab { padding:8px 16px; cursor:pointer; font-size:13px; font-weight:600; color:#8a94a3; border-bottom:2px solid transparent; }
+    .tab.active { color:#e6e6e6; border-bottom-color:#2b7cff; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+    .hit-row { padding:12px; border-bottom:1px solid #1a1f27; display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; gap:8px; align-items:center; font-size:13px; }
+    .hit-row:hover { background:#171c22; }
+    .hit-header { font-size:11px; font-weight:700; color:#8a94a3; text-transform:uppercase; }
+    .card-num { font-family:monospace; background:#0d1117; padding:2px 8px; border-radius:4px; font-size:12px; }
+    .src-badge { padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; }
+    .no-data { text-align:center; padding:40px; color:#8a94a3; }
+  </style>
 </head>
 <body>
   <header class="topbar">
-    <strong>DaemonERA Dashboard</strong>
+    <strong>🔐 DaemonERA Dashboard</strong>
     <div class="right">
       <span id="whoami" class="muted"></span>
       <button id="logout">Log out</button>
@@ -16,108 +36,148 @@
   </header>
 
   <main class="wrap">
+
+    <!-- User card -->
     <section id="me-card" class="card"></section>
+
+    <!-- Hit stats + table (admin) -->
     <section id="admin-card" class="card hidden">
-      <div class="table-header">
-        <h2>Users</h2>
+      <div class="tab-bar">
+        <div class="tab active" data-tab="users">👥 Users</div>
+        <div class="tab" data-tab="hits">🎯 Hits</div>
+      </div>
+
+      <!-- Users tab -->
+      <div class="tab-panel active" id="tab-users">
+        <div class="stat-boxes" id="user-stats"></div>
         <div class="filters">
           <input id="search" type="text" placeholder="Search name / username…" class="search-input" />
           <select id="source-filter" class="filter-select">
             <option value="">All sources</option>
             <option value="widget">Widget</option>
             <option value="bot">Bot</option>
-            <option value="extension">Extension</option>
+            <option value="extension">Extension / OTP</option>
           </select>
         </div>
+        <div class="table-wrap" style="margin-top:12px">
+          <table id="users-table">
+            <thead>
+              <tr>
+                <th></th><th>ID</th><th>Username</th><th>Name</th>
+                <th>Source</th><th>Hits</th><th>Logins</th><th>Last Login</th>
+              </tr>
+            </thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
       </div>
-      <div id="stats" class="stats-row"></div>
-      <div class="table-wrap">
-        <table id="users">
-          <thead>
-            <tr>
-              <th></th>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Name</th>
-              <th>Source</th>
-              <th>Logins</th>
-              <th>Last Login</th>
-              <th>Joined</th>
-            </tr>
-          </thead>
-          <tbody id="users-body"></tbody>
-        </table>
-        <p id="no-results" class="muted" style="text-align:center;padding:20px;display:none">No users match the filter.</p>
+
+      <!-- Hits tab -->
+      <div class="tab-panel" id="tab-hits">
+        <div class="stat-boxes" id="hit-stats"></div>
+        <div class="table-wrap">
+          <div class="hit-row hit-header">
+            <span>User</span><span>Card</span><span>Gate</span>
+            <span>Amount</span><span>Time</span>
+          </div>
+          <div id="hits-body"></div>
+        </div>
       </div>
     </section>
+
+    <!-- My stats (non-admin) -->
+    <section id="my-stats-card" class="card hidden">
+      <h2>My Hit Stats</h2>
+      <div class="stat-boxes" id="my-stat-boxes"></div>
+      <h3 style="margin:16px 0 8px">Recent Hits</h3>
+      <div class="table-wrap">
+        <div class="hit-row hit-header">
+          <span>Card</span><span>Gate</span><span>Amount</span><span>Time</span><span></span>
+        </div>
+        <div id="my-hits-body"></div>
+      </div>
+    </section>
+
   </main>
 
   <script src="/config.js"></script>
   <script>
     const API = window.APP_CONFIG.API_BASE;
+    const fmt = t => t ? new Date(t * 1000).toLocaleString() : "—";
+    const srcColor = { widget:"#2b7cff", bot:"#3fb950", extension:"#d2a8ff" };
+    const srcBadge = s => `<span class="src-badge" style="background:${srcColor[s]||'#8b949e'}20;color:${srcColor[s]||'#8b949e'};border:1px solid ${srcColor[s]||'#8b949e'}40">${s}</span>`;
 
-    // Get Bearer token from URL param (passed by extension) or use cookie
+    // Get Bearer token from URL param (extension login) or use cookie
     const params = new URLSearchParams(location.search);
     const urlToken = params.get("token");
-    if (urlToken) {
-      // Store in sessionStorage so page reloads still work
-      sessionStorage.setItem("ext_token", urlToken);
-      // Clean URL
-      history.replaceState({}, "", location.pathname);
-    }
+    if (urlToken) { sessionStorage.setItem("ext_token", urlToken); history.replaceState({}, "", location.pathname); }
     const extToken = urlToken || sessionStorage.getItem("ext_token");
+    const authHeaders = extToken ? { Authorization: `Bearer ${extToken}` } : {};
+    const apiFetch = path => fetch(API + path, { credentials: "include", headers: authHeaders });
 
-    const authHeaders = extToken
-      ? { Authorization: `Bearer ${extToken}` }
-      : {};
-
-    const apiFetch = (path) => fetch(API + path, {
-      credentials: "include",
-      headers: authHeaders,
+    // Tab switching
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+      });
     });
 
-    const fmt = (t) => t ? new Date(t * 1000).toLocaleString() : "—";
-    const srcBadge = (s) => {
-      const colors = { widget: "#2b7cff", bot: "#3fb950", extension: "#d2a8ff" };
-      return `<span class="src-badge" style="background:${colors[s]||'#8b949e'}20;color:${colors[s]||'#8b949e'};border:1px solid ${colors[s]||'#8b949e'}40">${s}</span>`;
-    };
-
     let allUsers = [];
-
-    function renderTable(users) {
-      const tbody = document.getElementById("users-body");
-      const noResults = document.getElementById("no-results");
-      if (!users.length) {
-        tbody.innerHTML = "";
-        noResults.style.display = "block";
-        return;
-      }
-      noResults.style.display = "none";
-      tbody.innerHTML = users.map((u) => `
-        <tr>
-          <td>${u.photo_url ? `<img src="${u.photo_url}" class="avatar sm" />` : `<div class="avatar-placeholder sm">👤</div>`}</td>
-          <td class="mono">${u.telegram_id}</td>
-          <td>${u.username ? `<a href="https://t.me/${u.username}" target="_blank">@${u.username}</a>` : '<span class="muted">—</span>'}</td>
-          <td>${[u.first_name, u.last_name].filter(Boolean).join(" ") || '<span class="muted">—</span>'}</td>
-          <td>${srcBadge(u.source)}</td>
-          <td class="center">${u.login_count}</td>
-          <td>${fmt(u.last_login)}</td>
-          <td>${fmt(u.created_at)}</td>
-        </tr>`).join("");
-    }
 
     function applyFilters() {
       const q = document.getElementById("search").value.toLowerCase();
       const src = document.getElementById("source-filter").value;
-      const filtered = allUsers.filter((u) => {
+      const filtered = allUsers.filter(u => {
         const matchSrc = !src || u.source === src;
-        const matchQ = !q ||
-          String(u.telegram_id).includes(q) ||
-          (u.username || "").toLowerCase().includes(q) ||
+        const matchQ = !q || String(u.telegram_id).includes(q) ||
+          (u.username||"").toLowerCase().includes(q) ||
           [u.first_name, u.last_name].filter(Boolean).join(" ").toLowerCase().includes(q);
         return matchSrc && matchQ;
       });
-      renderTable(filtered);
+      renderUsers(filtered);
+    }
+
+    function renderUsers(users) {
+      document.querySelector("#users-body").innerHTML = users.map(u => `
+        <tr>
+          <td>${u.photo_url ? `<img src="${u.photo_url}" class="avatar sm">` : `<div class="avatar sm" style="background:#21262d;display:flex;align-items:center;justify-content:center">👤</div>`}</td>
+          <td class="mono">${u.telegram_id}</td>
+          <td>${u.username ? `<a href="https://t.me/${u.username}" target="_blank">@${u.username}</a>` : '<span class="muted">—</span>'}</td>
+          <td>${[u.first_name, u.last_name].filter(Boolean).join(" ") || '<span class="muted">—</span>'}</td>
+          <td>${srcBadge(u.source)}</td>
+          <td style="font-weight:700;color:${u.hit_count>0?'#3fb950':'#8a94a3'}">${u.hit_count||0}</td>
+          <td>${u.login_count}</td>
+          <td>${fmt(u.last_login)}</td>
+        </tr>`).join("");
+    }
+
+    function renderHits(hits) {
+      const body = document.getElementById("hits-body");
+      if (!hits.length) { body.innerHTML = `<div class="no-data">No hits yet.</div>`; return; }
+      body.innerHTML = hits.map(h => `
+        <div class="hit-row">
+          <span>${h.username ? `@${h.username}` : h.telegram_id}</span>
+          <span>${h.card_bin ? `<span class="card-num">${h.card_bin}...${h.card_last4||'????'}</span>` : '<span class="muted">—</span>'}</span>
+          <span>${h.gate||'—'}</span>
+          <span>${h.amount||'—'}</span>
+          <span class="muted" style="font-size:12px">${fmt(h.created_at)}</span>
+        </div>`).join("");
+    }
+
+    function renderMyHits(hits) {
+      const body = document.getElementById("my-hits-body");
+      if (!hits.length) { body.innerHTML = `<div class="no-data">No hits yet.</div>`; return; }
+      body.innerHTML = hits.map(h => `
+        <div class="hit-row">
+          <span>${h.card_bin ? `<span class="card-num">${h.card_bin}...${h.card_last4||'????'}</span>` : '—'}</span>
+          <span>${h.gate||'—'}</span>
+          <span>${h.amount||'—'}</span>
+          <span class="muted" style="font-size:12px">${fmt(h.created_at)}</span>
+          <span></span>
+        </div>`).join("");
     }
 
     (async () => {
@@ -125,37 +185,54 @@
       const { user } = await r.json();
       if (!user) return (location.href = "/");
 
-      document.getElementById("whoami").textContent =
-        "@" + (user.username || user.name || user.sub);
-
+      document.getElementById("whoami").textContent = "@" + (user.username || user.name || user.sub);
       document.getElementById("me-card").innerHTML = `
         <div class="me">
-          ${user.photo ? `<img src="${user.photo}" class="avatar" />` : `<div class="avatar-placeholder">👤</div>`}
+          ${user.photo ? `<img src="${user.photo}" class="avatar">` : `<div class="avatar" style="background:#21262d;display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>`}
           <div>
-            <h2>${user.name || "User"}${user.is_admin ? '<span class="badge">admin</span>' : ""}</h2>
+            <h2>${user.name||"User"}${user.is_admin?'<span class="badge">admin</span>':''}</h2>
             <p class="muted">Telegram ID: ${user.sub}</p>
           </div>
         </div>`;
 
       if (user.is_admin) {
-        const ar = await apiFetch("/admin/users");
-        const { users } = await ar.json();
+        // Load users
+        const ur = await apiFetch("/admin/users");
+        const { users } = await ur.json();
         allUsers = users || [];
 
-        // Stats
-        const bySource = allUsers.reduce((a, u) => {
-          a[u.source] = (a[u.source] || 0) + 1; return a;
-        }, {});
-        document.getElementById("stats").innerHTML = `
-          <div class="stat"><span class="stat-num">${allUsers.length}</span><span class="stat-label">Total users</span></div>
-          ${Object.entries(bySource).map(([s, n]) => `
-          <div class="stat"><span class="stat-num">${n}</span><span class="stat-label">${s}</span></div>`).join("")}`;
+        const totalHits = allUsers.reduce((s, u) => s + (u.hit_count||0), 0);
+        document.getElementById("user-stats").innerHTML = `
+          <div class="stat-box"><div class="num">${allUsers.length}</div><div class="lbl">Total Users</div></div>
+          <div class="stat-box green"><div class="num">${totalHits}</div><div class="lbl">Total Hits</div></div>
+          <div class="stat-box gold"><div class="num">${allUsers.filter(u=>u.hit_count>0).length}</div><div class="lbl">Users w/ Hits</div></div>`;
 
-        renderTable(allUsers);
-        document.getElementById("admin-card").classList.remove("hidden");
-
+        renderUsers(allUsers);
         document.getElementById("search").addEventListener("input", applyFilters);
         document.getElementById("source-filter").addEventListener("change", applyFilters);
+
+        // Load hits
+        const hr = await apiFetch("/admin/hits?limit=100");
+        const { hits } = await hr.json();
+        const todayStart = Math.floor(Date.now() / 1000) - ((Math.floor(Date.now() / 1000)) % 86400);
+        const todayHits = (hits||[]).filter(h => h.created_at >= todayStart).length;
+        document.getElementById("hit-stats").innerHTML = `
+          <div class="stat-box green"><div class="num">${(hits||[]).length > 99 ? '100+' : (hits||[]).length}</div><div class="lbl">Recent Hits</div></div>
+          <div class="stat-box"><div class="num">${todayHits}</div><div class="lbl">Today's Hits</div></div>`;
+        renderHits(hits || []);
+
+        document.getElementById("admin-card").classList.remove("hidden");
+      } else {
+        // Non-admin: show personal stats
+        const sr = await apiFetch("/stats");
+        if (sr.ok) {
+          const { total, today, recent } = await sr.json();
+          document.getElementById("my-stat-boxes").innerHTML = `
+            <div class="stat-box green"><div class="num">${total}</div><div class="lbl">Total Hits</div></div>
+            <div class="stat-box"><div class="num">${today}</div><div class="lbl">Today</div></div>`;
+          renderMyHits(recent || []);
+          document.getElementById("my-stats-card").classList.remove("hidden");
+        }
       }
     })();
 
